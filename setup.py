@@ -1,9 +1,9 @@
 from setuptools import setup, find_packages
 
-requirements = ["numpy", "torch"]
+requirements = ["numpy", "torch", "h5py", "pydicom", "scipy"]
 
 setup(
-    name="PhyNN",
+    name="tumor_sim_pinns",
     version="0.0.0",
     description="",
     packages=find_packages(),

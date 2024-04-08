@@ -4,28 +4,23 @@ from abc import ABC, abstractmethod
 from typing import Iterator, Mapping, Sequence
 
 
-class BaseDataLoader(Mapping[int, tuple[np.ndarray, float]], ABC):
-    @property
-    def images(self) -> Sequence[np.ndarray]:
-        return [self[i][0] for i in range(len(self))]
+ImageDynamics = tuple[np.ndarray, np.ndarray, float]
 
-    @property
-    def time_elapsed(self) -> Sequence[float]:
-        return [self[i][1] for i in range(len(self))]
 
+class BaseDataLoader(Mapping[int, ImageDynamics], ABC):
     @property
     @abstractmethod
-    def image_shape(self) -> Sequence[int]:
-        pass
+    def shape(self) -> Sequence[int]:
+        raise NotImplementedError()
 
     @abstractmethod
     def __len__(self) -> int:
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
-    def __getitem__(self, index: int) -> tuple[np.ndarray, float]:
-        pass
+    def __getitem__(self, index: int) -> ImageDynamics:
+        raise NotImplementedError()
 
     @abstractmethod
     def __iter__(self) -> Iterator[int]:
-        pass
+        raise NotImplementedError()
