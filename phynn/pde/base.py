@@ -71,8 +71,8 @@ class PDEEval(nn.Module):
 
             x_current = x[t_mask]
             params = self._params_provider(x_current)
-            x_mask = x_current[self._mask_channel]
+            x_mask = x_current[:, self._mask_channel]
 
-            x[t_mask] += self._pde(x_mask, params)
+            x[t_mask, self._mask_channel] += self._pde(x_mask, params)
 
         return x
