@@ -22,7 +22,7 @@ class PDE(nn.Module, ABC):
 
 class PDEParamsProvider(nn.Module, ABC):
     def __init__(self) -> None:
-        super().__init__(PDEParamsProvider, self)
+        super(PDEParamsProvider, self).__init__()
 
     @abstractmethod
     def _params(self, x: th.Tensor) -> th.Tensor:
@@ -52,7 +52,12 @@ class PDEDynamicParams(PDEParamsProvider):
 
 class PDEEval(nn.Module):
     def __init__(
-        self, pde: PDE, params_provider: PDEParamsProvider, mask_channel: int
+        self,
+        pde: PDE,
+        params_provider: PDEParamsProvider,
+        mask_channel: int,
+        min_value: float = 0,
+        max_value: float = 1,
     ) -> None:
         super(PDEEval, self).__init__()
 
@@ -60,19 +65,23 @@ class PDEEval(nn.Module):
         self._params_provider = params_provider
         self._mask_channel = mask_channel
 
+        self._min_value = min_value
+        self._max_value = max_value
+
     def forward(self, x: th.Tensor, t: th.Tensor) -> th.Tensor:
         steps = int(t.max().item())
 
-        for i in range(steps):
-            x = x.clone()
+        params = self._params_provider(x)
+        y = x[:, self._mask_channel].clone().unsqueeze(1)
 
+        for i in range(steps):
             t_mask = t > i
             t_mask = t_mask.squeeze() if t_mask.dim() > 1 else t_mask
 
-            x_current = x[t_mask]
-            params = self._params_provider(x_current)
-            x_mask = x_current[:, self._mask_channel]
+            diff = self._pde(y[t_mask], params[t_mask]).requires_grad_(True)
 
-            x[t_mask, self._mask_channel] += self._pde(x_mask, params)
+            y[t_mask] += diff
 
-        return x
+            y = y.clip(self._min_value, self._max_value)
+
+        return y
