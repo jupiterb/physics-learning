@@ -19,10 +19,6 @@ class DataInterface(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def names(self, dim: int) -> Sequence[str]:
-        raise NotImplementedError()
-
-    @abstractmethod
     def get(self, series: int, t_start: int, t_end: int) -> ImageDynamics:
         raise NotImplementedError()
 
@@ -36,9 +32,6 @@ class DataLoader(Mapping[int, ImageDynamics]):
     @property
     def shape(self) -> Sequence[int]:
         return self._data_interface.image_shape
-
-    def names(self, dim: int) -> Sequence[str]:
-        return self._data_interface.names(dim)
 
     def __len__(self) -> int:
         return self._series * self._intervals

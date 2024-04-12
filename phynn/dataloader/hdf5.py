@@ -8,24 +8,9 @@ from phynn import device
 from phynn.dataloader.base import ImageDynamics, DataInterface
 
 
-class _HDF5DataInterface(DataInterface):
+class HDF5DirectlyFromFile(DataInterface):
     def __init__(self, path: os.PathLike) -> None:
         self._path = path
-        self._dim_names = {}
-
-        with h5py.File(self._path, "r") as file:
-            for dim in file.keys():
-                if dim.isdigit():
-                    dim_names = [name.decode("utf-8") for name in file[dim]["names"][:]]  # type: ignore
-                    self._dim_names[int(dim)] = dim_names
-
-    def names(self, dim: int) -> Sequence[str]:
-        return self._dim_names[dim]
-
-
-class HDF5DirectlyFromFile(_HDF5DataInterface):
-    def __init__(self, path: os.PathLike) -> None:
-        super().__init__(path)
 
         with h5py.File(self._path, "r") as file:
             self._shape = file["images"][:].shape  # type: ignore
@@ -47,11 +32,9 @@ class HDF5DirectlyFromFile(_HDF5DataInterface):
             return start, end, time_diff
 
 
-class HDF5LoadToMemory(_HDF5DataInterface):
+class HDF5LoadToMemory(DataInterface):
     def __init__(self, path: os.PathLike) -> None:
-        super().__init__(path)
-
-        with h5py.File(self._path, "r") as file:
+        with h5py.File(path, "r") as file:
             self._images = th.tensor(file["images"][:], dtype=th.float32).to(device)  # type: ignore
             self._times = th.tensor(file["times"][:], dtype=th.int32).to(device)  # type: ignore
 
