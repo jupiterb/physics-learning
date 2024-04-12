@@ -27,7 +27,7 @@ class _Resize(BasePipeline, ABC):
                 padding = self._padding(item.image)
                 image = self._fill(item.image, padding)
 
-            yield ImageData(image=image, labels=item.labels, dim_names=item.dim_names)
+            yield item.copy().set_image(image)
 
     @abstractmethod
     def _cut(self, image: np.ndarray) -> np.ndarray:
@@ -43,7 +43,7 @@ class _Resize(BasePipeline, ABC):
         return np.pad(image, pad_width, mode="constant")
 
 
-class FromBegin(_Resize):
+class TakeFromBegin(_Resize):
     def _cut(self, image: np.ndarray) -> np.ndarray:
         slices = [slice(None)] * len(image.shape)
         slices[self._dim] = slice(0, self._target_size)
@@ -53,7 +53,7 @@ class FromBegin(_Resize):
         return (0, self._target_size - image.shape[self._dim])
 
 
-class ToEnd(_Resize):
+class TakeToEnd(_Resize):
     def _cut(self, image: np.ndarray) -> np.ndarray:
         slices = [slice(None)] * len(image.shape)
         slices[self._dim] = slice(-self._target_size, None)
@@ -63,7 +63,7 @@ class ToEnd(_Resize):
         return (self._target_size - image.shape[self._dim], 0)
 
 
-class Centre(_Resize):
+class TakeCentre(_Resize):
     def __init__(self, source: BasePipeline, dim: int, target_size: int) -> None:
         super().__init__(source, dim, target_size)
         self._half_size = self._target_size // 2

@@ -27,4 +27,4 @@ class Rescale(BasePipeline):
 
             image = ndimage.zoom(item.image, scale_factors, order=1)
 
-            yield ImageData(image=image, labels=item.labels, dim_names=item.dim_names)
+            yield item.copy().set_image(image)
