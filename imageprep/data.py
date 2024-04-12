@@ -1,11 +1,17 @@
-import numpy as np
+from __future__ import annotations
 
 from dataclasses import dataclass
+import numpy as np
 
 
 @dataclass
 class ImageData:
     image: np.ndarray
     labels: tuple[str, ...]
-    dim_names: dict[int, list[str]]
-    time: np.ndarray | None = None
+
+    def copy(self) -> ImageData:
+        return ImageData(image=self.image, labels=self.labels)
+
+    def set_image(self, image: np.ndarray) -> ImageData:
+        self.image = image
+        return self
