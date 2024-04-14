@@ -74,8 +74,8 @@ class Trainer:
 
         losses = []
 
-        for X, Y, t in training_dl:
-            loss = self._forward_get_loss(X, Y, t, model)
+        for X, Y in training_dl:
+            loss = self._forward_get_loss(X, Y, model)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -89,12 +89,12 @@ class Trainer:
         losses = []
 
         with th.no_grad():
-            for X, Y, t in validation_dl:
-                loss = self._forward_get_loss(X, Y, t, model)
+            for X, Y in validation_dl:
+                loss = self._forward_get_loss(X, Y, model)
                 losses.append(loss.item())
 
         return sum(losses) / len(losses)
 
-    def _forward_get_loss(self, X, Y, t, model: nn.Module) -> th.Tensor:
-        Y_computed = model(X, t)
+    def _forward_get_loss(self, X, Y, model: nn.Module) -> th.Tensor:
+        Y_computed = model(*X)
         return self._loss_fun(Y_computed, Y)

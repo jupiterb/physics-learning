@@ -7,9 +7,6 @@ class ReactionDiffusionPDE(PDE):
     def _diff(self, x: np.ndarray, params: np.ndarray) -> np.ndarray:
         D, p = params[:, 0], params[:, 1]
 
-        D = D.reshape(x.shape)
-        p = p.reshape(x.shape)
-
         diffusion_term = D * sum(
             [
                 np.gradient(np.gradient(x, axis=dim), axis=dim)

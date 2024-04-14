@@ -4,7 +4,10 @@ from abc import ABC, abstractmethod
 from typing import Iterator, Mapping, Sequence
 
 
-ImageDynamics = tuple[th.Tensor, th.Tensor, float]
+ImageDynamicsNoParams = tuple[tuple[th.Tensor, float], th.Tensor]
+ImageDynamicsWithParams = tuple[tuple[th.Tensor, float, th.Tensor], th.Tensor]
+
+ImageDynamics = ImageDynamicsNoParams | ImageDynamicsWithParams
 
 
 class DataInterface(ABC):

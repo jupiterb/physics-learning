@@ -35,10 +35,10 @@ class PDEParamsProvider(nn.Module, ABC):
 class PDEStaticParams(PDEParamsProvider):
     def __init__(self, *params: float) -> None:
         super().__init__()
-        self._constants = tuple(params)
+        self._constants = th.tensor(params)
 
     def _params(self, x: th.Tensor) -> th.Tensor:
-        return th.tensor(self._constants)
+        return self._constants.unsqueeze(0).repeat(len(x), 1).to(x.device)
 
 
 class PDEDynamicParams(PDEParamsProvider):
@@ -55,30 +55,33 @@ class PDEEval(nn.Module):
         self,
         pde: PDE,
         params_provider: PDEParamsProvider,
-        mask_channel: int,
         min_value: float = 0,
         max_value: float = 1,
+        min_concentration: float = 0,
     ) -> None:
         super(PDEEval, self).__init__()
 
         self._pde = pde
         self._params_provider = params_provider
-        self._mask_channel = mask_channel
 
         self._min_value = min_value
         self._max_value = max_value
 
+        self._min_concentration = min_concentration
+
     def forward(self, x: th.Tensor, t: th.Tensor) -> th.Tensor:
         steps = int(t.max().item())
-
-        params = self._params_provider(x)
-        y = x[:, self._mask_channel].clone().unsqueeze(1)
+        y = x.clone()
 
         for i in range(steps):
             t_mask = t > i
             t_mask = t_mask.squeeze() if t_mask.dim() > 1 else t_mask
 
-            diff = self._pde(y[t_mask], params[t_mask]).requires_grad_(True)
+            concentration_mask = y[t_mask] > self._min_concentration
+            concentration = y[t_mask] * concentration_mask
+
+            params = self._params_provider(concentration)
+            diff = self._pde(concentration, params).requires_grad_(True)
 
             y[t_mask] += diff
 
