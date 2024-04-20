@@ -164,3 +164,4 @@ cython_debug/
 # datasets
 solutions/brain_tumor/data/raw/Brain-Tumor-Progression
 solutions/brain_tumor/data/preprocessed/Brain-Tumor-Progression
+solutions/brain_tumor/data/raw/BRATS2020

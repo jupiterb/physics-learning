@@ -1,15 +1,14 @@
 import numpy as np
 
 from abc import ABC, abstractmethod
-from datetime import datetime
 from typing import Iterator, Mapping
 
 from imageprep import ImageData
-from imageprep.pipeline.base import BasePipeline
+from imageprep.pipeline.base import Pipeline
 
 
-class _Group(BasePipeline, ABC):
-    def __init__(self, pipeline: BasePipeline) -> None:
+class _Group(Pipeline, ABC):
+    def __init__(self, pipeline: Pipeline) -> None:
         self._pipeline = pipeline
 
     def run(self) -> Iterator[ImageData]:
@@ -33,7 +32,7 @@ class _Group(BasePipeline, ABC):
 
 
 class StackImages(_Group):
-    def __init__(self, pipeline: BasePipeline) -> None:
+    def __init__(self, pipeline: Pipeline) -> None:
         super().__init__(pipeline)
 
     def _as_one(self, data: list[ImageData]) -> ImageData:
@@ -49,7 +48,7 @@ class StackImages(_Group):
 
 
 class MeanOfImages(StackImages):
-    def __init__(self, pipeline: BasePipeline, weights: Mapping[str, float]) -> None:
+    def __init__(self, pipeline: Pipeline, weights: Mapping[str, float]) -> None:
         super().__init__(pipeline)
         self._weights = weights
 

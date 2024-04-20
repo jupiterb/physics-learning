@@ -15,3 +15,7 @@ class ImageData:
     def set_image(self, image: np.ndarray) -> ImageData:
         self.image = image
         return self
+
+    def set_labels(self, labels: tuple[str, ...]) -> ImageData:
+        self.labels = labels
+        return self

@@ -4,11 +4,11 @@ from abc import ABC, abstractmethod
 from typing import Iterator
 
 from imageprep import ImageData
-from imageprep.pipeline.base import BasePipeline
+from imageprep.pipeline.base import Pipeline
 
 
-class _Resize(BasePipeline, ABC):
-    def __init__(self, pipeline: BasePipeline, dim: int, target_size: int) -> None:
+class _Resize(Pipeline, ABC):
+    def __init__(self, pipeline: Pipeline, dim: int, target_size: int) -> None:
         self._pipeline = pipeline
         self._dim = dim
         self._target_size = target_size
@@ -64,7 +64,7 @@ class TakeToEnd(_Resize):
 
 
 class TakeCentre(_Resize):
-    def __init__(self, source: BasePipeline, dim: int, target_size: int) -> None:
+    def __init__(self, source: Pipeline, dim: int, target_size: int) -> None:
         super().__init__(source, dim, target_size)
         self._half_size = self._target_size // 2
 

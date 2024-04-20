@@ -2,12 +2,10 @@ import numpy as np
 
 from datetime import datetime
 
-from imageprep.finder import BaseDataFinder
+from imageprep.finder import DataFinder
 
 
-def get_time_data(
-    finder: BaseDataFinder, time_dim: int, time_format: str
-) -> np.ndarray:
+def get_time_data(finder: DataFinder, time_dim: int, time_format: str) -> np.ndarray:
     target_labels = sorted({labels[: time_dim + 1] for labels, _ in finder.find()})
 
     groups: dict[tuple[str, ...], list] = {

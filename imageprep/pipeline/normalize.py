@@ -3,11 +3,11 @@ import numpy as np
 from typing import Iterator
 
 from imageprep import ImageData
-from imageprep.pipeline.base import BasePipeline
+from imageprep.pipeline.base import Pipeline
 
 
-class NormalizeImages(BasePipeline):
-    def __init__(self, pipeline: BasePipeline, scale: float = 1.0) -> None:
+class NormalizeImages(Pipeline):
+    def __init__(self, pipeline: Pipeline, scale: float = 1.0) -> None:
         self._pipeline = pipeline
         self._scale = scale
 

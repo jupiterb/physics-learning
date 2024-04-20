@@ -2,12 +2,12 @@ from scipy import ndimage
 from typing import Iterator
 
 from imageprep import ImageData
-from imageprep.pipeline.base import BasePipeline
+from imageprep.pipeline.base import Pipeline
 
 
-class Rescale(BasePipeline):
+class Rescale(Pipeline):
 
-    def __init__(self, pipeline: BasePipeline, dim: int, target_size: int) -> None:
+    def __init__(self, pipeline: Pipeline, dim: int, target_size: int) -> None:
         self._pipeline = pipeline
         self._dim = dim
         self._target_size = target_size

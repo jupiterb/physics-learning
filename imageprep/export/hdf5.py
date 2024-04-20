@@ -21,4 +21,4 @@ class HDF5Exporter:
             file.create_dataset("times", data=time)
 
             if time_series_params is not None:
-                file.create_dataset("params", time_series_params)
+                file.create_dataset("params", data=time_series_params)
