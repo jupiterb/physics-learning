@@ -33,12 +33,20 @@ class PDEParamsProvider(nn.Module, ABC):
 
 
 class PDEStaticParams(PDEParamsProvider):
-    def __init__(self, *params: float) -> None:
+    def __init__(self, *values: float) -> None:
         super().__init__()
-        self._constants = th.tensor(params)
+        self._values = tuple(values)
+
+    @property
+    def values(self) -> tuple[float, ...]:
+        return self._values
+
+    @values.setter
+    def values(self, *params: float) -> None:
+        self._values = tuple(params)
 
     def _params(self, x: th.Tensor) -> th.Tensor:
-        return self._constants.unsqueeze(0).repeat(len(x), 1).to(x.device)
+        return th.tensor(data=self._values).repeat(len(x), 1).to(x.device)
 
 
 class PDEDynamicParams(PDEParamsProvider):

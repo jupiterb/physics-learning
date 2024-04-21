@@ -4,7 +4,7 @@ import os
 from imageprep.export import HDF5Exporter
 from imageprep.finder import BrainTumorProgressionDataFinder
 from imageprep.pipeline import (
-    DicomImagesLoader,
+    DICOMImagesLoader,
     MeanOfImages,
     NormalizeImages,
     Rescale,
@@ -59,7 +59,7 @@ def preprocess(
         dataset_path, list(image_type_weights.keys())
     )
 
-    pipeline = DicomImagesLoader(finder)
+    pipeline = DICOMImagesLoader(finder)
     pipeline = StackImages(pipeline)
 
     target_height, _, _ = get_min_shape(pipeline.run())
