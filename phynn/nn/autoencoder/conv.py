@@ -14,37 +14,39 @@ class ConvAutoEncoder(AutoEncoder):
         image_shape: Sequence[int],
         channels: Sequence[int],
         kernel_sizes: Sequence[int],
-        strides: Sequence[int] | None = None,
-        paddings: Sequence[int] | None = None,
-        poolings: Sequence[int | None] | None = None,
+        poolings: Sequence[int] | None = None,
         activation_functions: Sequence[ActivationFunction] | None = None,
         is_3d: bool = False,
         inner: AutoEncoder | None = None,
         flat_latent: bool = True,
     ) -> None:
+        encoder_paddings = [(size - 1) // 2 for size in kernel_sizes]
+
         encoder = Conv(
             channels,
             kernel_sizes,
-            strides,
-            paddings,
+            None,
+            encoder_paddings,
             poolings,
             activation_functions=activation_functions,
             transpose=False,
             is_3d=is_3d,
         )
 
-        decoder_channels = list(reversed(channels))
+        decoder_channels = channels[::-1]
         decoder_activations_functions = (
-            None
-            if activation_functions is None
-            else list(reversed(activation_functions))
+            None if activation_functions is None else activation_functions[::-1]
         )
+        decoder_kernel_sizes = kernel_sizes[::-1]
+        decoder_poolings = None if poolings is None else poolings[::-1]
+        decoder_paddings = [(size - 1) // 2 for size in decoder_kernel_sizes]
+
         decoder = Conv(
             decoder_channels,
-            kernel_sizes,
-            strides,
-            paddings,
-            poolings,
+            decoder_kernel_sizes,
+            None,
+            decoder_paddings,
+            decoder_poolings,
             decoder_activations_functions,
             transpose=True,
             is_3d=is_3d,

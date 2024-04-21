@@ -26,21 +26,22 @@ class _ConvBlock(nn.Module):
         else:
             conv_fun = nn.Conv3d if is_3d else nn.Conv2d
 
+        batch_norm = nn.BatchNorm3d if is_3d else nn.BatchNorm2d
+
         self._conv = nn.Sequential()
+
+        if pooling is not None and transpose:
+            self._conv.append(nn.Upsample(scale_factor=pooling, mode="nearest"))
+
         self._conv.append(
             conv_fun(in_channels, out_channels, kernel_size, stride, padding)
         )
+        self._conv.append(batch_norm(out_channels))
         self._conv.append(activation_fun())
 
-        if pooling is not None:
-            if transpose and is_3d:
-                pool = nn.Upsample(scale_factor=pooling, mode="nearest")
-            elif is_3d:
-                pool = nn.MaxPool3d(kernel_size=pooling, stride=pooling)
-            else:
-                pool = nn.MaxPool2d(kernel_size=pooling, stride=pooling)
-
-            self._conv.append(pool)
+        if pooling is not None and not transpose:
+            pool = nn.MaxPool3d if is_3d else nn.MaxPool2d
+            self._conv.append(pool(kernel_size=pooling, stride=pooling))
 
     def forward(self, x: th.Tensor) -> th.Tensor:
         return self._conv(x)
@@ -68,7 +69,7 @@ class Conv(nn.Module):
         paddings = sequence_of(1) if paddings is None else paddings
         poolings = sequence_of(None) if poolings is None else poolings
         activation_functions = (
-            sequence_of(nn.ReLU)
+            sequence_of(nn.LeakyReLU)
             if activation_functions is None
             else activation_functions
         )

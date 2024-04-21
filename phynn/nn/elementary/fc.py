@@ -15,13 +15,14 @@ class FC(nn.Module):
         super(FC, self).__init__()
 
         if activation_functions is None:
-            activation_functions = [nn.ReLU for _ in layer_sizes[1:]]
+            activation_functions = [nn.LeakyReLU for _ in layer_sizes[1:]]
 
         self._fc = nn.Sequential()
         input_size = layer_sizes[0]
 
         for output_size, activation_fun in zip(layer_sizes[1:], activation_functions):
             self._fc.append(nn.Linear(input_size, output_size))
+            self._fc.append(nn.BatchNorm1d(output_size))
             self._fc.append(activation_fun())
             input_size = output_size
 
