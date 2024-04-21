@@ -19,7 +19,7 @@ from imageprep.pipeline import (
     TakeCentre,
 )
 
-from phynn.pde import PDEEval, PDEStaticParams, ReactionDiffusionPDE
+from phynn.pde import PDEEval, PDEStaticParams, FisherKolmogorovPDE
 
 
 def get_args():
@@ -38,7 +38,7 @@ def get_args():
     parser.add_argument(
         "--simulation_steps",
         type=int,
-        default=3,
+        default=5,
         required=False,
         help="Simulation steps",
     )
@@ -55,23 +55,28 @@ def generate(
     image_type_weights = {
         "t1": 0.0,
         "t2": 0.0,
-        "seg": 0.7,
-        "flair": 0.3,
+        "seg": 0.8,
+        "flair": 0.2,
         "t1ce": 0.0,
     }
 
-    pde = ReactionDiffusionPDE()
+    pde = FisherKolmogorovPDE()
     params_provider = PDEStaticParams(0, 0)
-    pde_eval = PDEEval(pde, params_provider, min_concentration=0.3)
+    pde_eval = PDEEval(
+        pde,
+        params_provider,
+        min_concentration=0.3,
+        boundary_condition=lambda x: x > 0.02,
+    )
 
     def transpose(x: np.ndarray) -> np.ndarray:
         return x.transpose((2, 1, 0))
 
     def random_time_diff() -> int:
-        return random.randint(10, 20)
+        return random.randint(2, 5)
 
     def random_params() -> tuple[float, ...]:
-        return (random.uniform(0.01, 0.3), random.uniform(0.01, 0.3))
+        return (random.uniform(0.75, 2.0), random.uniform(0.5, 5.0))
 
     def simulate(x: np.ndarray, t: int, params: tuple[float, ...]) -> np.ndarray:
         with th.no_grad():
@@ -97,7 +102,7 @@ def generate(
     mean_normalized = NormalizeImages(mean)
 
     centre_of_mass_crosses = CenterOfMassSplit(mean_normalized, 0)
-    replied = Reply(centre_of_mass_crosses, 10, True)
+    replied = Reply(centre_of_mass_crosses, 2, True)
 
     simulation = Simulate(
         replied, simulate, random_time_diff, random_params, simulation_steps

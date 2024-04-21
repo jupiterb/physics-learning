@@ -3,7 +3,7 @@ import numpy as np
 from phynn.pde.base import PDE
 
 
-class ReactionDiffusionPDE(PDE):
+class FisherKolmogorovPDE(PDE):
     def _diff(self, x: np.ndarray, params: np.ndarray) -> np.ndarray:
         D, p = params[:, 0], params[:, 1]
 

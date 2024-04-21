@@ -3,6 +3,7 @@ import torch as th
 
 from abc import ABC, abstractmethod
 from torch import nn
+from typing import Callable
 
 
 class PDE(nn.Module, ABC):
@@ -66,6 +67,7 @@ class PDEEval(nn.Module):
         min_value: float = 0,
         max_value: float = 1,
         min_concentration: float = 0,
+        boundary_condition: Callable[[th.Tensor], th.Tensor] = lambda x: x >= 0,
     ) -> None:
         super(PDEEval, self).__init__()
 
@@ -76,6 +78,7 @@ class PDEEval(nn.Module):
         self._max_value = max_value
 
         self._min_concentration = min_concentration
+        self._boundary_condition = boundary_condition
 
     def forward(self, x: th.Tensor, t: th.Tensor) -> th.Tensor:
         steps = int(t.max().item())
@@ -91,7 +94,10 @@ class PDEEval(nn.Module):
             params = self._params_provider(concentration)
             diff = self._pde(concentration, params).requires_grad_(True)
 
+            boundary_mask = self._boundary_condition(y[t_mask])
+
             y[t_mask] += diff
+            y[t_mask] *= boundary_mask
 
             y = y.clip(self._min_value, self._max_value)
 
