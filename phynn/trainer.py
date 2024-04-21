@@ -5,7 +5,8 @@ from torch.utils.data import Dataset, DataLoader
 from typing import Type
 from tqdm import tqdm
 
-from phynn.dataloader import ImageDynamics, DataLoader as PhynnDataLoader
+from phynn.dataloader import Tensors, DataLoader as PhynnDataLoader
+from phynn.loss import PairwiseLoss
 
 
 class PhynnDataset(Dataset):
@@ -15,7 +16,7 @@ class PhynnDataset(Dataset):
     def __len__(self) -> int:
         return len(self._loader)
 
-    def __getitem__(self, index) -> ImageDynamics:
+    def __getitem__(self, index) -> tuple[Tensors, Tensors]:
         return self._loader[index]
 
 
@@ -33,7 +34,7 @@ class Trainer:
         self._optimizer_cls = optimizer_cls
         self._lr = lr
         self._batch_size = batch_size
-        self._loss_fun = loss_fun
+        self._loss_fun = PairwiseLoss(loss_fun)
 
     def run(
         self,
@@ -97,4 +98,8 @@ class Trainer:
 
     def _forward_get_loss(self, X, Y, model: nn.Module) -> th.Tensor:
         Y_computed = model(*X)
+
+        if not isinstance(Y_computed, tuple):
+            Y_computed = (Y_computed,)
+
         return self._loss_fun(Y_computed, Y)

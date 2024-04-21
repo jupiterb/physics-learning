@@ -5,7 +5,7 @@ import torch as th
 from typing import Sequence
 
 from phynn import default_device
-from phynn.dataloader.base import ImageDynamics, DataInterface
+from phynn.dataloader.base import DynamicsSample, DataInterface
 
 
 def _get_params(file: h5py.File, device: th.device) -> th.Tensor | None:
@@ -24,6 +24,11 @@ class HDF5DirectlyFromFile(DataInterface):
             self._shape = file["images"][:].shape  # type: ignore
 
     @property
+    def has_params(self) -> bool:
+        with h5py.File(self._path, "r") as file:
+            return _get_params(file, self._device) is not None
+
+    @property
     def image_shape(self) -> Sequence[int]:
         return self._shape[2:]
 
@@ -31,19 +36,15 @@ class HDF5DirectlyFromFile(DataInterface):
     def times_shape(self) -> Sequence[int]:
         return self._shape[:2]
 
-    def get(self, series: int, t_start: int, t_end: int) -> ImageDynamics:
+    def get(self, series: int, t_start: int, t_end: int) -> DynamicsSample:
         with h5py.File(self._path, "r") as file:
             start = th.tensor(file["images"][series][t_start], dtype=th.float32).to(self._device)  # type: ignore
-            end = th.tensor(file["images"][series][t_end], dtype=th.float32).to(self._device)  # type: ignore
+            result = th.tensor(file["images"][series][t_end], dtype=th.float32).to(self._device)  # type: ignore
             times = th.tensor(file["times"][series], dtype=th.int32).to(self._device)  # type: ignore
-            time_diff = (times[t_end] - times[t_start]).item()
+            time_diff = (times[t_end] - times[t_start]).unsqueeze(0)
             params = _get_params(file, self._device)
 
-            return (
-                ((start, time_diff), end)
-                if params is None
-                else ((start, time_diff, params[series]), end)
-            )
+            return DynamicsSample(start, result, time_diff, params)
 
 
 class HDF5LoadToMemory(DataInterface):
@@ -54,6 +55,10 @@ class HDF5LoadToMemory(DataInterface):
             self._params = _get_params(file, device)
 
     @property
+    def has_params(self) -> bool:
+        return self._params is not None
+
+    @property
     def image_shape(self) -> Sequence[int]:
         return self._images.shape[2:]
 
@@ -61,13 +66,14 @@ class HDF5LoadToMemory(DataInterface):
     def times_shape(self) -> Sequence[int]:
         return self._times.shape
 
-    def get(self, series: int, t_start: int, t_end: int) -> ImageDynamics:
+    def get(self, series: int, t_start: int, t_end: int) -> DynamicsSample:
         start = self._images[series][t_start]
-        end = self._images[series][t_end]
-        time_diff = (self._times[series][t_end] - self._times[series][t_start]).item()
+        result = self._images[series][t_end]
 
-        return (
-            ((start, time_diff), end)
-            if self._params is None
-            else ((start, time_diff, self._params[series]), end)
-        )
+        time_diff = (
+            self._times[series][t_end] - self._times[series][t_start]
+        ).unsqueeze(0)
+
+        params = None if self._params is None else self._params[series]
+
+        return DynamicsSample(start, result, time_diff, params)

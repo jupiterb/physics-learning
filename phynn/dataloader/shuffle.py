@@ -1,7 +1,7 @@
 from random import shuffle
 from typing import Sequence
 
-from phynn.dataloader.base import ImageDynamics, DataInterface
+from phynn.dataloader.base import DynamicsSample, DataInterface
 
 
 class ShuffleDataInterface(DataInterface):
@@ -11,6 +11,10 @@ class ShuffleDataInterface(DataInterface):
         shuffle(self._shuffle)
 
     @property
+    def has_params(self) -> bool:
+        return self._base_interface.has_params
+
+    @property
     def image_shape(self) -> Sequence[int]:
         return self._base_interface.image_shape
 
@@ -18,6 +22,6 @@ class ShuffleDataInterface(DataInterface):
     def times_shape(self) -> Sequence[int]:
         return self._base_interface.times_shape
 
-    def get(self, series: int, t_start: int, t_end: int) -> ImageDynamics:
+    def get(self, series: int, t_start: int, t_end: int) -> DynamicsSample:
         series = self._shuffle[series]
         return self._base_interface.get(series, t_start, t_end)

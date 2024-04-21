@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from phynn.dataloader.base import ImageDynamics, DataInterface
+from phynn.dataloader.base import DynamicsSample, DataInterface
 
 
 class SplitDataInterface(DataInterface):
@@ -10,6 +10,10 @@ class SplitDataInterface(DataInterface):
         self._end = end
 
     @property
+    def has_params(self) -> bool:
+        return self._base_interface.has_params
+
+    @property
     def image_shape(self) -> Sequence[int]:
         return self._base_interface.image_shape
 
@@ -17,6 +21,6 @@ class SplitDataInterface(DataInterface):
     def times_shape(self) -> Sequence[int]:
         return self._end - self._start, *self._base_interface.times_shape[1:]
 
-    def get(self, series: int, t_start: int, t_end: int) -> ImageDynamics:
+    def get(self, series: int, t_start: int, t_end: int) -> DynamicsSample:
         series = series + self._start
         return self._base_interface.get(series, t_start, t_end)
