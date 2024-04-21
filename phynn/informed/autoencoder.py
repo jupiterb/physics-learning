@@ -2,7 +2,7 @@ import torch as th
 
 from torch import nn
 
-from phynn.nn.autoencoder.base import AutoEncoder
+from phynn.nn import AutoEncoder
 
 
 class PhysicsInformedAutoEncoder(nn.Module):
@@ -27,20 +27,3 @@ class PhysicsInformedAutoEncoder(nn.Module):
             self._autoencoder.decoder(latent_x),
             self._autoencoder.decoder(latent_y),
         )
-
-
-class DeltaLatentAutoEncoder(nn.Module):
-    def __init__(
-        self, delta_latent_encoder: nn.Module, delta_latent_decoder: nn.Module
-    ) -> None:
-        super(DeltaLatentAutoEncoder, self).__init__()
-        self._delta_latent_encoder = delta_latent_encoder
-        self._delta_latent_decoder = delta_latent_decoder
-
-    def forward(self, t: th.Tensor, params: th.Tensor) -> th.Tensor:
-        t_params = th.hstack((t, params))
-
-        with th.no_grad():
-            delta_latent = self._delta_latent_encoder(t_params)
-
-        return self._delta_latent_decoder(delta_latent)
