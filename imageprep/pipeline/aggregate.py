@@ -7,7 +7,7 @@ from imageprep import ImageData
 from imageprep.pipeline.base import Pipeline
 
 
-class _Group(Pipeline, ABC):
+class _Aggregate(Pipeline, ABC):
     def __init__(self, pipeline: Pipeline) -> None:
         self._pipeline = pipeline
 
@@ -19,23 +19,23 @@ class _Group(Pipeline, ABC):
             if len(to_stack) == 0 or group_labels == item.labels[:-1]:
                 to_stack.append(item)
             else:
-                yield self._as_one(to_stack)
+                yield self._aggregate(to_stack)
                 to_stack = [item]
 
             group_labels = item.labels[:-1]
 
-        yield self._as_one(to_stack)
+        yield self._aggregate(to_stack)
 
     @abstractmethod
-    def _as_one(self, data: list[ImageData]) -> ImageData:
+    def _aggregate(self, data: list[ImageData]) -> ImageData:
         raise NotADirectoryError()
 
 
-class StackImages(_Group):
+class StackImages(_Aggregate):
     def __init__(self, pipeline: Pipeline) -> None:
         super().__init__(pipeline)
 
-    def _as_one(self, data: list[ImageData]) -> ImageData:
+    def _aggregate(self, data: list[ImageData]) -> ImageData:
         images = [item.image for item in data]
         image = np.stack(images)
 
@@ -52,8 +52,8 @@ class MeanOfImages(StackImages):
         super().__init__(pipeline)
         self._weights = weights
 
-    def _as_one(self, data: list[ImageData]) -> ImageData:
-        stacked = super()._as_one(data)
+    def _aggregate(self, data: list[ImageData]) -> ImageData:
+        stacked = super()._aggregate(data)
         image = stacked.image
 
         dim_names = (item.labels[-1] for item in data)

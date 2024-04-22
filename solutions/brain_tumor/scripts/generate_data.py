@@ -11,11 +11,11 @@ from imageprep.pipeline import (
     ApplyOnImages,
     MeanOfImages,
     NormalizeImages,
-    CenterOfMassSplit,
+    CentreOfMass,
     Rescale,
     StackImages,
     Simulate,
-    Reply,
+    Repeat,
     TakeCentre,
 )
 
@@ -101,8 +101,8 @@ def generate(
     mean = MeanOfImages(normalized, image_type_weights)
     mean_normalized = NormalizeImages(mean)
 
-    centre_of_mass_crosses = CenterOfMassSplit(mean_normalized, 0)
-    replied = Reply(centre_of_mass_crosses, 2, True)
+    centre_of_mass_crosses = CentreOfMass(mean_normalized, 0)
+    replied = Repeat(centre_of_mass_crosses, 2)
 
     simulation = Simulate(
         replied, simulate, random_time_diff, random_params, simulation_steps
