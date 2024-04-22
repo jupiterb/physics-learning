@@ -1,23 +1,11 @@
 import torch as th
 
 from torch import nn, optim
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 from typing import Type
 from tqdm import tqdm
 
-from phynn.dataloader import Tensors, DataLoader as PhynnDataLoader
-from phynn.loss import PairwiseLoss
-
-
-class PhynnDataset(Dataset):
-    def __init__(self, loader: PhynnDataLoader) -> None:
-        self._loader = loader
-
-    def __len__(self) -> int:
-        return len(self._loader)
-
-    def __getitem__(self, index) -> tuple[Tensors, Tensors]:
-        return self._loader[index]
+from phynn.train.dataset import PhynnDataset
 
 
 OptimizerClass = Type[optim.Adam] | Type[optim.AdamW] | Type[optim.SGD]
@@ -34,29 +22,24 @@ class Trainer:
         self._optimizer_cls = optimizer_cls
         self._lr = lr
         self._batch_size = batch_size
-        self._loss_fun = PairwiseLoss(loss_fun)
+        self._loss_fun = loss_fun
 
     def run(
         self,
         model: nn.Module,
-        training_data: PhynnDataLoader,
-        validation_data: PhynnDataLoader,
+        training_ds: PhynnDataset,
+        testing_ds: PhynnDataset,
         epochs: int,
     ) -> nn.Module:
         optimizer = self._optimizer_cls(model.parameters(), lr=self._lr)
 
-        training_dl = DataLoader(
-            PhynnDataset(training_data), batch_size=self._batch_size, shuffle=True
-        )
-
-        validation_dl = DataLoader(
-            PhynnDataset(validation_data), batch_size=self._batch_size, shuffle=False
-        )
+        training_dl = DataLoader(training_ds, self._batch_size)
+        testing_dl = DataLoader(testing_ds, batch_size=self._batch_size, shuffle=False)
 
         with tqdm(total=epochs, desc="first epoch running...") as progress_bar:
             for epoch in range(epochs):
                 train_loss = self._train_step(model, optimizer, training_dl)
-                test_loss = self._validation_step(model, validation_dl)
+                test_loss = self._test_step(model, testing_dl)
 
                 progress_bar.set_description(
                     f"epochs: {epoch+1}  train loss: {train_loss}  test Loss: {test_loss}"
@@ -66,10 +49,7 @@ class Trainer:
         return model
 
     def _train_step(
-        self,
-        model: nn.Module,
-        optimizer: optim.Optimizer,
-        training_dl: DataLoader,
+        self, model: nn.Module, optimizer: optim.Optimizer, training_dl: DataLoader
     ) -> float:
         model.train()
 
@@ -84,13 +64,13 @@ class Trainer:
 
         return sum(losses) / len(losses)
 
-    def _validation_step(self, model: nn.Module, validation_dl: DataLoader) -> float:
+    def _test_step(self, model: nn.Module, testing_dl: DataLoader) -> float:
         model.eval()
 
         losses = []
 
         with th.no_grad():
-            for X, Y in validation_dl:
+            for X, Y in testing_dl:
                 loss = self._forward_get_loss(X, Y, model)
                 losses.append(loss.item())
 
@@ -98,8 +78,4 @@ class Trainer:
 
     def _forward_get_loss(self, X, Y, model: nn.Module) -> th.Tensor:
         Y_computed = model(*X)
-
-        if not isinstance(Y_computed, tuple):
-            Y_computed = (Y_computed,)
-
         return self._loss_fun(Y_computed, Y)

@@ -3,7 +3,7 @@ import torch as th
 from functools import reduce
 from torch import nn
 
-from phynn.dataloader import Tensors
+from phynn.train.dataset import Tensors
 
 
 class PairwiseLoss(nn.Module):
