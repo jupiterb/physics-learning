@@ -8,7 +8,9 @@ from tqdm import tqdm
 from phynn.train.dataset import PhynnDataset
 
 
-OptimizerClass = Type[optim.Adam] | Type[optim.AdamW] | Type[optim.SGD]
+OptimizerClass = (
+    Type[optim.Adam] | Type[optim.AdamW] | Type[optim.SGD] | Type[optim.RMSprop]
+)
 
 
 class Trainer:
@@ -36,46 +38,62 @@ class Trainer:
         training_dl = DataLoader(training_ds, self._batch_size)
         testing_dl = DataLoader(testing_ds, batch_size=self._batch_size, shuffle=False)
 
-        with tqdm(total=epochs, desc="first epoch running...") as progress_bar:
+        with tqdm(total=epochs, desc="Starting...") as progress_bar:
             for epoch in range(epochs):
-                train_loss = self._train_step(model, optimizer, training_dl)
-                test_loss = self._test_step(model, testing_dl)
-
-                progress_bar.set_description(
-                    f"epochs: {epoch+1}  train loss: {train_loss}  test Loss: {test_loss}"
-                )
-                progress_bar.update()
+                self._train_step(model, optimizer, training_dl, progress_bar, epoch)
+                self._test_step(model, testing_dl, progress_bar, epoch)
 
         return model
 
     def _train_step(
-        self, model: nn.Module, optimizer: optim.Optimizer, training_dl: DataLoader
+        self,
+        model: nn.Module,
+        optimizer: optim.Optimizer,
+        training_dl: DataLoader,
+        progress_bar: tqdm,
+        epoch: int,
     ) -> float:
         model.train()
 
         losses = []
 
-        for X, Y in training_dl:
+        for i, (X, Y) in enumerate(training_dl):
             loss = self._forward_get_loss(X, Y, model)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             losses.append(loss.item())
 
+            progress_bar.set_description(
+                f"[TRAIN] Epoch: {epoch} Batch: {i+1}/{len(training_dl)} Loss (current): {loss.item()}"
+            )
+            progress_bar.update()
+
         return sum(losses) / len(losses)
 
-    def _test_step(self, model: nn.Module, testing_dl: DataLoader) -> float:
+    def _test_step(
+        self,
+        model: nn.Module,
+        testing_dl: DataLoader,
+        progress_bar: tqdm,
+        epoch: int,
+    ) -> float:
         model.eval()
 
         losses = []
 
         with th.no_grad():
-            for X, Y in testing_dl:
+            for i, (X, Y) in enumerate(testing_dl):
                 loss = self._forward_get_loss(X, Y, model)
                 losses.append(loss.item())
+
+                progress_bar.set_description(
+                    f"[TEST] Epoch: {epoch} Batch: {i+1}/{len(testing_dl)} Loss (mean): {sum(losses) / len(losses)}"
+                )
+                progress_bar.update()
 
         return sum(losses) / len(losses)
 
     def _forward_get_loss(self, X, Y, model: nn.Module) -> th.Tensor:
         Y_computed = model(*X)
-        return self._loss_fun(Y_computed, Y)
+        return self._loss_fun(Y_computed[:2], Y) + Y_computed[2].mean()

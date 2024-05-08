@@ -31,14 +31,14 @@ def get_args():
     parser.add_argument(
         "--target_size",
         type=int,
-        default=128,
+        default=64,
         required=False,
         help="Target length and width of images after preprocessing",
     )
     parser.add_argument(
         "--simulation_steps",
         type=int,
-        default=5,
+        default=7,
         required=False,
         help="Simulation steps",
     )
@@ -52,20 +52,14 @@ def generate(
     target_size: int,
     simulation_steps: int,
 ) -> None:
-    image_type_weights = {
-        "t1": 0.0,
-        "t2": 0.0,
-        "seg": 0.8,
-        "flair": 0.2,
-        "t1ce": 0.0,
-    }
+    image_type_weights = {"seg": 0.8, "flair": 0.2}
 
     pde = FisherKolmogorovPDE()
     params_provider = PDEStaticParams(0, 0)
     pde_eval = PDEEval(
         pde,
         params_provider,
-        min_concentration=0.3,
+        min_concentration=0.4,
         boundary_condition=lambda x: x > 0.02,
     )
 
@@ -73,10 +67,10 @@ def generate(
         return x.transpose((2, 1, 0))
 
     def random_time_diff() -> int:
-        return random.randint(2, 5)
+        return random.randint(1, 2)
 
     def random_params() -> tuple[float, ...]:
-        return (random.uniform(0.75, 2.0), random.uniform(0.5, 5.0))
+        return (random.uniform(3, 6), random.uniform(1.0, 2.0))
 
     def simulate(x: np.ndarray, t: int, params: tuple[float, ...]) -> np.ndarray:
         with th.no_grad():
@@ -102,7 +96,7 @@ def generate(
     mean_normalized = NormalizeImages(mean)
 
     centre_of_mass_crosses = CentreOfMass(mean_normalized, 0)
-    replied = Repeat(centre_of_mass_crosses, 2)
+    replied = Repeat(centre_of_mass_crosses, 10)
 
     simulation = Simulate(
         replied, simulate, random_time_diff, random_params, simulation_steps

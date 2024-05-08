@@ -28,19 +28,19 @@ class PhynnDataset(Dataset):
         self._pairs_indices = {}
 
         series_length = data.times_shape[1]
-        pair = 0
+        self._pairs = 0
 
         for t_start in range(series_length - 1):
             for t_end in range(t_start + 1, series_length):
-                self._pairs_indices[pair] = (t_start, t_end)
-                pair += 1
+                self._pairs_indices[self._pairs] = (t_start, t_end)
+                self._pairs += 1
 
     def __len__(self) -> int:
-        return self._series * len(self._pairs_indices)
+        return self._series * self._pairs
 
     def __getitem__(self, index) -> tuple[Tensors, Tensors]:
-        series = index // len(self._pairs_indices)
-        pair = index % len(self._pairs_indices)
+        series = index // self._pairs
+        pair = index % self._pairs
         t_start, t_end = self._pairs_indices[pair]
 
         sample = self._data.get(series, t_start, t_end)

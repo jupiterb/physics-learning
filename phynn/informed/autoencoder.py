@@ -14,16 +14,18 @@ class PhysicsInformedAutoEncoder(nn.Module):
         self._delta_latent_encoder = delta_latent_encoder
 
     def forward(
-        self, x: th.Tensor, t: th.Tensor, params: th.Tensor
-    ) -> tuple[th.Tensor, th.Tensor]:
+        self, x: th.Tensor, y: th.Tensor, t: th.Tensor, params: th.Tensor
+    ) -> tuple[th.Tensor, th.Tensor, th.Tensor]:
         latent_x = self._autoencoder.encoder(x)
+        latent_y = self._autoencoder.encoder(y)
 
         t_params = th.hstack((t, params))
         delta_latent = self._delta_latent_encoder(t_params)
 
-        latent_y = latent_x + delta_latent
+        delta_latent_error = delta_latent - (latent_y - latent_x)
 
         return (
             self._autoencoder.decoder(latent_x),
             self._autoencoder.decoder(latent_y),
+            delta_latent_error,
         )

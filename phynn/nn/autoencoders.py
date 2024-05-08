@@ -81,7 +81,7 @@ class ConvAutoEncoder(AutoEncoder):
         self._conv_encoder.add_output_block(
             hidden_channels, kernel_size, encoder_activation, rescale=rescale
         )
-        self._conv_encoder.add_input_block(
+        self._conv_decoder.add_input_block(
             hidden_channels,
             kernel_size,
             decoder_activation,
