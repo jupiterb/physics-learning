@@ -2,8 +2,8 @@ import numpy as np
 
 from typing import Callable, Iterator
 
-from imageprep import ImageData
-from imageprep.pipeline.base import Pipeline
+from phyprep import ImageData
+from phyprep.pipeline.base import Pipeline
 
 
 class GenerateImages(Pipeline):

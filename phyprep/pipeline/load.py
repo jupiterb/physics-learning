@@ -4,9 +4,9 @@ import pydicom
 
 from typing import Iterator
 
-from imageprep import ImageData
-from imageprep.finder import DataFinder
-from imageprep.pipeline.base import Pipeline
+from phyprep import ImageData
+from phyprep.finder import DataFinder
+from phyprep.pipeline.base import Pipeline
 
 
 class DICOMImagesLoader(Pipeline):

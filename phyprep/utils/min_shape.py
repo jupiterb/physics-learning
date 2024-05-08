@@ -1,4 +1,4 @@
-from imageprep import ImageData
+from phyprep import ImageData
 
 from typing import Iterator, Sequence
 

@@ -1,9 +1,9 @@
 import argparse
 import os
 
-from imageprep.export import HDF5Exporter
-from imageprep.finder import BrainTumorProgressionDataFinder
-from imageprep.pipeline import (
+from phyprep.export import HDF5Exporter
+from phyprep.finder import BrainTumorProgressionDataFinder
+from phyprep.pipeline import (
     DICOMImagesLoader,
     MeanOfImages,
     NormalizeImages,
@@ -12,7 +12,7 @@ from imageprep.pipeline import (
     TakeCentre,
     TakeFromBegin,
 )
-from imageprep.utils import get_min_shape, get_time_data
+from phyprep.utils import get_min_shape, get_time_data
 
 
 def get_args():

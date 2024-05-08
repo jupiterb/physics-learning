@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Iterator
 
-from imageprep import ImageData
+from phyprep import ImageData
 
 
 class Pipeline(ABC):

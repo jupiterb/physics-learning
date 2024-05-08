@@ -2,7 +2,7 @@ import numpy as np
 
 from datetime import datetime
 
-from imageprep.finder import DataFinder
+from phyprep.finder import DataFinder
 
 
 def get_time_data(finder: DataFinder, time_dim: int, time_format: str) -> np.ndarray:

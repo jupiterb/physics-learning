@@ -4,9 +4,9 @@ import os
 import random
 import torch as th
 
-from imageprep.export import HDF5Exporter
-from imageprep.finder import BRATS2020DataFinder
-from imageprep.pipeline import (
+from phyprep.export import HDF5Exporter
+from phyprep.finder import BRATS2020DataFinder
+from phyprep.pipeline import (
     NIfTIImagesLoader,
     ApplyOnImages,
     MeanOfImages,

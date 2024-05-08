@@ -3,8 +3,8 @@ import numpy as np
 from abc import ABC, abstractmethod
 from typing import Iterator, Mapping
 
-from imageprep import ImageData
-from imageprep.pipeline.base import Pipeline
+from phyprep import ImageData
+from phyprep.pipeline.base import Pipeline
 
 
 class _Aggregate(Pipeline, ABC):

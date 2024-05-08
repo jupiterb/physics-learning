@@ -4,7 +4,7 @@ import re
 from datetime import datetime
 from typing import Sequence
 
-from imageprep.finder.base import FileSystemFinder
+from phyprep.finder.base import FileSystemFinder
 
 
 class BrainTumorProgressionDataFinder(FileSystemFinder):

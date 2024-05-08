@@ -3,7 +3,7 @@ import re
 
 from typing import Sequence
 
-from imageprep.finder.base import FileSystemFinder
+from phyprep.finder.base import FileSystemFinder
 
 
 class BRATS2020DataFinder(FileSystemFinder):
