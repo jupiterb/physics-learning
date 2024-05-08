@@ -1,2 +1,1 @@
-from phynn._device import device
-from phynn.trainer import Trainer
+from phynn._device import default_device

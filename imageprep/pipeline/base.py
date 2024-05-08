@@ -4,7 +4,7 @@ from typing import Iterator
 from imageprep import ImageData
 
 
-class BasePipeline(ABC):
+class Pipeline(ABC):
     @abstractmethod
     def run(self) -> Iterator[ImageData]:
         raise NotImplementedError()

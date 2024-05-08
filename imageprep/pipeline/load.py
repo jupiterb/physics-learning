@@ -1,19 +1,33 @@
+import nibabel as nib
+import numpy as np
 import pydicom
 
 from typing import Iterator
 
 from imageprep import ImageData
-from imageprep.finder import BaseDataFinder
-from imageprep.pipeline.base import BasePipeline
+from imageprep.finder import DataFinder
+from imageprep.pipeline.base import Pipeline
 
 
-class DicomImagesLoader(BasePipeline):
-    def __init__(self, finder: BaseDataFinder) -> None:
+class DICOMImagesLoader(Pipeline):
+    def __init__(self, finder: DataFinder) -> None:
         self._finder = finder
 
     def run(self) -> Iterator[ImageData]:
         for labels, filepath in self._finder.find():
             image = pydicom.dcmread(filepath).pixel_array
+
+            if image is not None:
+                yield ImageData(image=image, labels=labels)
+
+
+class NIfTIImagesLoader(Pipeline):
+    def __init__(self, finder: DataFinder) -> None:
+        self._finder = finder
+
+    def run(self) -> Iterator[ImageData]:
+        for labels, filepath in self._finder.find():
+            image = np.asarray(nib.load(filepath).dataobj)  # type: ignore
 
             if image is not None:
                 yield ImageData(image=image, labels=labels)

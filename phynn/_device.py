@@ -11,4 +11,4 @@ def _get_device():
     return device
 
 
-device = _get_device()
+default_device = _get_device()

@@ -162,6 +162,7 @@ cython_debug/
 *.DS_Store
 
 # datasets
-data/raw/UPENN-GBM
-data/raw/Brain-Tumor-Progression
-data/preprocessed/Brain-Tumor-Progression
+solutions/brain_tumor/data/raw/Brain-Tumor-Progression
+solutions/brain_tumor/data/preprocessed/Brain-Tumor-Progression
+solutions/brain_tumor/data/raw/BRATS2020
+solutions/brain_tumor/data/preprocessed/BRATS2020
