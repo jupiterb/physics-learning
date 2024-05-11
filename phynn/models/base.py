@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 import lightning as L
-from torch import optim, utils
+from torch import optim
 from typing import Type
 
 
