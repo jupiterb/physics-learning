@@ -1,6 +1,6 @@
 from setuptools import setup, find_namespace_packages
 
-phynn_requirements = ["torch", "lightning", "h5py", "tqdm"]
+phynn_requirements = ["torch", "lightning", "h5py", "wandb"]
 phyprep_requirements = ["numpy", "torch", "pydicom", "nibabel"]
 
 

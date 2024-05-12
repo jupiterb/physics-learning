@@ -11,4 +11,4 @@ def _get_device():
     return device
 
 
-default_device = _get_device()
+training_device = _get_device()
