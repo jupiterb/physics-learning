@@ -17,6 +17,11 @@ class NNBuilder(Generic[NNBlockParams], ABC):
     def nn(self) -> nn.Sequential:
         return self._nn
 
+    def reset(self) -> nn.Sequential:
+        result = self._nn
+        self._nn = nn.Sequential()
+        return result
+
     @abstractmethod
     def prepend(self, params: NNBlockParams) -> NNBuilder[NNBlockParams]:
         raise NotImplementedError()
