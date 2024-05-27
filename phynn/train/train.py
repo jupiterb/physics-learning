@@ -1,8 +1,7 @@
 from datetime import datetime
 import lightning as L
 from lightning.pytorch.loggers import WandbLogger
-from torch.utils.data import Dataset, ConcatDataset, DataLoader
-from typing import Sequence
+from torch.utils.data import Dataset, DataLoader
 import wandb
 
 from phynn.models import BaseModel
@@ -10,14 +9,11 @@ from phynn.models import BaseModel
 
 def train(
     model: BaseModel,
-    train_datasets: Sequence[Dataset],
-    val_datasets: Sequence[Dataset],
+    train_dataset: Dataset,
+    val_dataset: Dataset,
     batch_size: int,
     epochs: int,
 ) -> BaseModel:
-    train_dataset = ConcatDataset(train_datasets)
-    val_dataset = ConcatDataset(val_datasets)
-
     train_dataloader = DataLoader(train_dataset, batch_size, True)
     val_dataloader = DataLoader(val_dataset, batch_size, False)
 

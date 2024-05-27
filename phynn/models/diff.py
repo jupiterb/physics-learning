@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from typing import Sequence
 
 from phynn.models.base import BaseModel, OptimizerParams
-from phynn.nn import DiffEquation, FrozenDiffEquation
+from phynn.diff import DiffEquation, FrozenDiffEquation, simulate
 
 
 class DiffEquationModel(BaseModel):
@@ -19,19 +19,21 @@ class DiffEquationModel(BaseModel):
         self._diff_eq = neural_diff_eq
 
     def training_step(self, batch: th.Tensor, batch_idx: int) -> th.Tensor:  # type: ignore
-        u, u_next, params = batch[0], batch[1], batch[2]
-        loss = self._step(u, u_next, params)
+        u, u_next, params, duration = batch[0], batch[1], batch[2], batch[3]
+        loss = self._step(u, u_next, params, duration)
         self.log_dict({"loss": loss})
         return loss
 
     def validation_step(self, batch: th.Tensor, batch_idx: int) -> th.Tensor:  # type: ignore
-        u, u_next, params = batch[0], batch[1], batch[2]
-        loss = self._step(u, u_next, params)
+        u, u_next, params, duration = batch[0], batch[1], batch[2], batch[3]
+        loss = self._step(u, u_next, params, duration)
         self.log_dict({"val_loss": loss})
         return loss
 
-    def _step(self, u: th.Tensor, u_next: th.Tensor, params: th.Tensor) -> th.Tensor:
-        diff = self._diff_eq(u, params)
+    def _step(
+        self, u: th.Tensor, u_next: th.Tensor, params: th.Tensor, duration: th.Tensor
+    ) -> th.Tensor:
+        diff = simulate(self._diff_eq, u, params, duration)
         return F.mse_loss(diff, u_next - u)
 
 
