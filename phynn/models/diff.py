@@ -19,22 +19,22 @@ class DiffEquationModel(BaseModel):
         self._diff_eq = neural_diff_eq
 
     def training_step(self, batch: th.Tensor, batch_idx: int) -> th.Tensor:  # type: ignore
-        u, u_next, params, duration = batch[0], batch[1], batch[2], batch[3]
-        loss = self._step(u, u_next, params, duration)
+        u, u_result, params, duration = batch[0], batch[1], batch[2], batch[3]
+        loss = self._step(u, u_result, params, duration)
         self.log_dict({"loss": loss})
         return loss
 
     def validation_step(self, batch: th.Tensor, batch_idx: int) -> th.Tensor:  # type: ignore
-        u, u_next, params, duration = batch[0], batch[1], batch[2], batch[3]
-        loss = self._step(u, u_next, params, duration)
+        u, u_result, params, duration = batch[0], batch[1], batch[2], batch[3]
+        loss = self._step(u, u_result, params, duration)
         self.log_dict({"val_loss": loss})
         return loss
 
     def _step(
-        self, u: th.Tensor, u_next: th.Tensor, params: th.Tensor, duration: th.Tensor
+        self, u: th.Tensor, u_result: th.Tensor, params: th.Tensor, duration: th.Tensor
     ) -> th.Tensor:
-        diff = simulate(self._diff_eq, u, params, duration)
-        return F.mse_loss(diff, u_next - u)
+        u_result_predicted = simulate(self._diff_eq, u, params, duration)
+        return F.mse_loss(u_result_predicted - u, u_result - u)
 
 
 class ForwardProblemDiffEquationModel(BaseModel):
@@ -59,24 +59,28 @@ class ForwardProblemDiffEquationModel(BaseModel):
         self._pde_weight = pde_residuum_weight
 
     def training_step(self, batch: th.Tensor, batch_idx: int) -> th.Tensor:  # type: ignore
-        u, u_next_data, u_next_pde = batch[0], batch[1], batch[2]
-        loss = self._step(u, u_next_data, u_next_pde)
+        u, u_result_d, u_result_p, duration = batch[0], batch[1], batch[2], batch[3]
+        loss = self._step(u, u_result_d, u_result_p, duration)
         self.log_dict({"loss": loss})
         return loss
 
     def validation_step(self, batch: th.Tensor, batch_idx: int) -> th.Tensor:  # type: ignore
-        u, u_next_data, u_next_pde = batch[0], batch[1], batch[2]
-        loss = self._step(u, u_next_data, u_next_pde)
+        u, u_result_d, u_result_p, duration = batch[0], batch[1], batch[2], batch[3]
+        loss = self._step(u, u_result_d, u_result_p, duration)
         self.log_dict({"val_loss": loss})
         return loss
 
     def _step(
-        self, u: th.Tensor, u_next_data: th.Tensor, u_next_pde: th.Tensor
+        self,
+        u: th.Tensor,
+        u_result_d: th.Tensor,
+        u_result_p: th.Tensor,
+        duration: th.Tensor,
     ) -> th.Tensor:
         params = self._params.view((1, self._num_params))
-        diff = self._diff_eq(u, params)
-        loss_data = F.mse_loss(diff, u_next_data - u)
-        loss_pde = F.mse_loss(diff, u_next_pde - u)
+        u_result = simulate(self._diff_eq, u, params, duration)
+        loss_data = F.mse_loss(u_result - u, u_result_d - u)
+        loss_pde = F.mse_loss(u_result - u, u_result_p - u)
         return (1 - self._pde_weight) * loss_data + self._pde_weight * loss_pde
 
 
@@ -102,18 +106,20 @@ class InverseProblemDiffEquationModel(BaseModel):
         return self._params.detach()
 
     def training_step(self, batch: th.Tensor, batch_idx: int) -> th.Tensor:  # type: ignore
-        u, u_next = batch[0], batch[1]
-        loss = self._step(u, u_next)
+        u, u_result_d, duration = batch[0], batch[1], batch[2]
+        loss = self._step(u, u_result_d, duration)
         self.log_dict({"loss": loss})
         return loss
 
     def validation_step(self, batch: th.Tensor, batch_idx: int) -> th.Tensor:  # type: ignore
-        u, u_next = batch[0], batch[1]
-        loss = self._step(u, u_next)
+        u, u_result_d, duration = batch[0], batch[1], batch[2]
+        loss = self._step(u, u_result_d, duration)
         self.log_dict({"val_loss": loss})
         return loss
 
-    def _step(self, u: th.Tensor, u_next: th.Tensor) -> th.Tensor:
+    def _step(
+        self, u: th.Tensor, u_result: th.Tensor, duration: th.Tensor
+    ) -> th.Tensor:
         params = self._params.view((1, self._num_params))
-        diff = self._diff_eq(u, params)
-        return F.mse_loss(diff, u_next - u)
+        u_result_predicted = simulate(self._diff_eq, u, params, duration)
+        return F.mse_loss(u_result_predicted - u, u_result - u)

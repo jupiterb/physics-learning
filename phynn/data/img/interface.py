@@ -7,7 +7,7 @@ from typing import Callable, Sequence
 from phynn.data.utils import HDF5DataExportManager
 
 
-ImageDataIndices = Sequence[int] | th.Tensor
+Indices = Sequence[int] | th.Tensor
 
 
 class ImagesDataInterface(ABC):
@@ -22,7 +22,7 @@ class ImagesDataInterface(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_batch(self, ixs: ImageDataIndices) -> th.Tensor:
+    def get_batch(self, ixs: Indices) -> th.Tensor:
         raise NotImplementedError()
 
 
@@ -41,7 +41,7 @@ class ImagesDataInterfaceWrapper(ImagesDataInterface):
     def image_shape(self) -> Sequence[int]:
         return self._func(self.get_batch([0])).shape
 
-    def get_batch(self, ixs: ImageDataIndices) -> th.Tensor:
+    def get_batch(self, ixs: Indices) -> th.Tensor:
         return self._func(self._data.get_batch(ixs))
 
 
@@ -49,12 +49,11 @@ class HDF5ImagesDataInterface(ImagesDataInterface):
     def __init__(
         self,
         path: os.PathLike,
-        key: str,
         device: th.device,
         data_type: th.dtype = th.float32,
     ) -> None:
         with h5py.File(path, "r") as file:
-            self._data = th.tensor(file[key][:], dtype=data_type).to(device)  # type: ignore
+            self._data = th.tensor(file["data"][:], dtype=data_type).to(device)  # type: ignore
 
     @property
     def size(self) -> int:
@@ -64,7 +63,7 @@ class HDF5ImagesDataInterface(ImagesDataInterface):
     def image_shape(self) -> Sequence[int]:
         return self._data.shape[1:]
 
-    def get_batch(self, ixs: ImageDataIndices) -> th.Tensor:
+    def get_batch(self, ixs: Indices) -> th.Tensor:
         return self._data[ixs]
 
 
@@ -81,7 +80,7 @@ class ImagesDataVariationInterface(ImagesDataInterface):
     def image_shape(self) -> Sequence[int]:
         return self._data.image_shape
 
-    def get_batch(self, ixs: ImageDataIndices) -> th.Tensor:
+    def get_batch(self, ixs: Indices) -> th.Tensor:
         ixs = self._variation[ixs]
         return self._data.get_batch(ixs)
 
@@ -116,4 +115,4 @@ def save(
             stop = min(data.size, start + batch_size)
             ixs = list(range(start, stop))
             batch = data.get_batch(ixs)
-            dataset.put(batch)
+            dataset.append(batch)

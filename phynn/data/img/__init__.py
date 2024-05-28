@@ -1,5 +1,6 @@
 from data.img.interface import (
     ImagesDataInterface,
+    ImagesDataInterfaceWrapper,
     HDF5ImagesDataInterface,
     ImagesDataVariationInterface,
     train_test_split,

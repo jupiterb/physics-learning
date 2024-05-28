@@ -12,7 +12,7 @@ class HDF5DataSetExporter:
     def __init__(self, dataset: h5py.Dataset) -> None:
         self._dataset = dataset
 
-    def put(self, batch: th.Tensor) -> None:
+    def append(self, batch: th.Tensor) -> None:
         batch_size = batch.shape[0]
         current_size = self._dataset.shape[0]
         new_size = current_size + batch_size

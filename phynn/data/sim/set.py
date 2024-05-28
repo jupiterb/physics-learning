@@ -18,14 +18,14 @@ class DynamicSimulationDataset(Dataset):
     def __init__(
         self,
         initial_conditions: ImagesDataInterface,
-        diff: DiffEquation,
+        diff_eq: DiffEquation,
         params_provider: Callable[[int], th.Tensor],
         max_simulation_steps: int,
         max_pre_steps: int,
     ) -> None:
         super().__init__()
         self._ics = initial_conditions
-        self._diff = diff
+        self._diff = diff_eq
         self._params = params_provider
         self._max_sim_steps = max_simulation_steps
         self._max_pre_steps = max_pre_steps
