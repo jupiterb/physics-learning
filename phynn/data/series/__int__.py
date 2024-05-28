@@ -1,4 +1,4 @@
-from data.series.interface import (
+from phynn.data.series.interface import (
     TimeSeriesDataInterface,
     TimeSeriesDataInterfaceWrapper,
     HDF5TimeSeriesDataInterface,
@@ -6,4 +6,4 @@ from data.series.interface import (
     train_test_split,
     save,
 )
-from data.series.set import TimeSeriesDataset, PhyInformedTimeSeriesDataset
+from phynn.data.series.set import TimeSeriesDataset, PhyInformedTimeSeriesDataset

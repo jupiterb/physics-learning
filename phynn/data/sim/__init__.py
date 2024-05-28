@@ -1,1 +1,1 @@
-from data.sim.set import DynamicSimulationDataset
+from phynn.data.sim.set import DynamicSimulationDataset
