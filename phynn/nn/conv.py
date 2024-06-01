@@ -16,6 +16,7 @@ class ConvBlockParams:
     stride: int = 1
     same_padding: bool = True
     rescale: int = 1
+    dropout: float = 0.0
 
 
 def ConvBlock(
@@ -31,6 +32,9 @@ def ConvBlock(
 
     padding = (params.kernel_size - 1) // 2 if params.same_padding else 1
     conv_cls = nn.ConvTranspose2d if transpose else nn.Conv2d
+
+    if params.dropout > 0:
+        conv.append(nn.Dropout(params.dropout))
 
     conv.append(
         conv_cls(in_channels, out_channels, params.kernel_size, params.stride, padding)
@@ -53,6 +57,10 @@ class Conv(NNBuilder[ConvBlockParams]):
         self._in_channels = initial_channels
         self._out_channels = initial_channels
         self._transpose = transpose
+
+    def transpose(self, value: bool) -> NNBuilder[ConvBlockParams]:
+        self._transpose = value
+        return self
 
     def prepend(self, params: ConvBlockParams) -> NNBuilder[ConvBlockParams]:
         block = ConvBlock(params.channels, self._in_channels, params, self._transpose)

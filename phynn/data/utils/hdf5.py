@@ -27,6 +27,11 @@ class HDF5DataExportManager(AbstractContextManager):
                 f"The file {path} already exists and override is set to False."
             )
 
+        dir_path = os.path.dirname(path)
+
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+
         self._path = path
 
     def __enter__(self) -> HDF5DataExportManager:

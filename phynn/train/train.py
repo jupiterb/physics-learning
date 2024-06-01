@@ -21,11 +21,12 @@ def train(
     logger = WandbLogger(project="physics-learning", name=run_name)
 
     try:
-        trainer = L.Trainer(max_epochs=epochs, logger=logger)
+        trainer = L.Trainer(max_epochs=epochs, logger=logger, log_every_n_steps=1)
         trainer.fit(model, train_dataloader, val_dataloader)
         wandb.finish()
     except Exception as e:
         print(f"Exception raised: {e}")
         wandb.finish(1)
+        raise e
 
     return model

@@ -1,10 +1,31 @@
+from lightning.pytorch.loggers import WandbLogger
 import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision.utils import make_grid
+
 from typing import Sequence
 
 from phynn.models.base import BaseModel, OptimizerParams
 from phynn.diff import DiffEquation, FrozenDiffEquation, simulate
+
+
+def _try_log_val_visualization(
+    logger,
+    u_input: th.Tensor,
+    u_target: th.Tensor,
+    u_prediction: th.Tensor,
+) -> None:
+    if isinstance(logger, WandbLogger):
+        u_input_grid = make_grid(u_input, 1)
+        u_target_grid = make_grid(u_target, 1)
+        u_prediction_gird = make_grid(u_prediction, 1)
+
+        logger.log_image(
+            key="val_visualization",
+            images=[u_input_grid, u_target_grid, u_prediction_gird],
+            caption=["u_input", "u_target", "u_prediction"],
+        )
 
 
 class DiffEquationModel(BaseModel):
@@ -19,22 +40,25 @@ class DiffEquationModel(BaseModel):
         self._diff_eq = neural_diff_eq
 
     def training_step(self, batch: th.Tensor, batch_idx: int) -> th.Tensor:  # type: ignore
-        u, u_result, params, duration = batch[0], batch[1], batch[2], batch[3]
-        loss = self._step(u, u_result, params, duration)
+        u_input, u_target, params, duration = batch
+        u_prediction = simulate(self._diff_eq, u_input, params, duration)
+        loss = self._loss(u_prediction, u_target)
         self.log_dict({"loss": loss})
         return loss
 
     def validation_step(self, batch: th.Tensor, batch_idx: int) -> th.Tensor:  # type: ignore
-        u, u_result, params, duration = batch[0], batch[1], batch[2], batch[3]
-        loss = self._step(u, u_result, params, duration)
+        u_input, u_target, params, duration = batch
+        u_prediction = simulate(self._diff_eq, u_input, params, duration)
+        loss = self._loss(u_prediction, u_target)
         self.log_dict({"val_loss": loss})
+
+        if batch_idx == 0:
+            _try_log_val_visualization(self.logger, u_input, u_target, u_prediction)
+
         return loss
 
-    def _step(
-        self, u: th.Tensor, u_result: th.Tensor, params: th.Tensor, duration: th.Tensor
-    ) -> th.Tensor:
-        u_result_predicted = simulate(self._diff_eq, u, params, duration)
-        return F.mse_loss(u_result_predicted - u, u_result - u)
+    def _loss(self, prediction: th.Tensor, target: th.Tensor) -> th.Tensor:
+        return F.mse_loss(prediction, target)
 
 
 class ForwardProblemDiffEquationModel(BaseModel):

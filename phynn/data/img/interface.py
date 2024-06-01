@@ -39,7 +39,7 @@ class ImagesDataInterfaceWrapper(ImagesDataInterface):
 
     @property
     def image_shape(self) -> Sequence[int]:
-        return self._func(self.get_batch([0])).shape
+        return self.get_batch([0]).shape[1:]
 
     def get_batch(self, ixs: Indices) -> th.Tensor:
         return self._func(self._data.get_batch(ixs))

@@ -26,17 +26,21 @@ class ResBlock(nn.Module):
 MaybeResBlockParams = ResBlockParams[NNBlockParams] | NNBlockParams
 
 
-class ResNet(NNBuilder[MaybeResBlockParams]):
+class ResNet(NNBuilder[MaybeResBlockParams[NNBlockParams]]):
     def __init__(self, nn_builder: NNBuilder[NNBlockParams]) -> None:
         super().__init__()
         self._builder = nn_builder
 
-    def prepend(self, params: MaybeResBlockParams) -> NNBuilder[MaybeResBlockParams]:
+    def prepend(
+        self, params: MaybeResBlockParams[NNBlockParams]
+    ) -> NNBuilder[MaybeResBlockParams[NNBlockParams]]:
         block = self._create_block(self._builder.prepend, params)
         self._nn = nn.Sequential(block) + self._nn
         return self
 
-    def append(self, params: MaybeResBlockParams) -> NNBuilder[MaybeResBlockParams]:
+    def append(
+        self, params: MaybeResBlockParams[NNBlockParams]
+    ) -> NNBuilder[MaybeResBlockParams[NNBlockParams]]:
         block = self._create_block(self._builder.append, params)
         self._nn.append(block)
         return self
@@ -49,6 +53,6 @@ class ResNet(NNBuilder[MaybeResBlockParams]):
         if isinstance(params, ResBlockParams):
             for _ in range(params.size):
                 add(params.params)
-            return ResBlock(self._builder.reset())
+            return ResBlock(self._builder.unload())
         else:
-            return add(params).reset()
+            return add(params).unload()
