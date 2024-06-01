@@ -1,4 +1,0 @@
-ipykernel
-ipywidgets
-matplotlib
-pandas
