@@ -166,5 +166,5 @@ experiments/brain_tumor/data/raw/Brain-Tumor-Progression
 experiments/brain_tumor/data/processed/Brain-Tumor-Progression
 experiments/brain_tumor/data/raw/BRATS2020
 experiments/brain_tumor/data/processed/BRATS2020
-experiments/brain_tumor/physics-learning
-experiments/brain_tumor/wandb
+experiments/brain_tumor/**/physics-learning
+experiments/brain_tumor/**/wandb

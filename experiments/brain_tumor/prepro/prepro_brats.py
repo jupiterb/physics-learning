@@ -117,7 +117,7 @@ def preprocess(
 def main() -> None:
     image_weights = {"flair": 0.0, "seg": 0.8, "t1": 0.2, "t1ce": 0.0, "t2": 0.0}
     source_path = Path(
-        "./data/raw/BRATS2020/BraTS2020_TrainingData/MICCAI_BraTS2020_TrainingData"
+        "./../data/raw/BRATS2020/BraTS2020_TrainingData/MICCAI_BraTS2020_TrainingData"
     )
 
     brats_data = BRATSDataInterface(source_path, list(image_weights.keys()))
