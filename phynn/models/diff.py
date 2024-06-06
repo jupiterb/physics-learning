@@ -30,13 +30,9 @@ def _try_log_val_visualization(
 
 class DiffEquationModel(BaseModel):
     def __init__(
-        self,
-        neural_diff_eq: DiffEquation,
-        optimizer_params: OptimizerParams,
-        equation_name: str | None = None,
+        self, neural_diff_eq: DiffEquation, optimizer_params: OptimizerParams
     ) -> None:
-        name = "equation" + ("" if equation_name is None else f"_{equation_name}")
-        super().__init__(optimizer_params, name)
+        super().__init__(optimizer_params)
         self._diff_eq = neural_diff_eq
 
     def training_step(self, batch: th.Tensor, batch_idx: int) -> th.Tensor:  # type: ignore
@@ -68,12 +64,8 @@ class ForwardProblemDiffEquationModel(BaseModel):
         params: Sequence[float],
         optimizer_params: OptimizerParams,
         pde_residuum_weight: float = 0.5,
-        equation_name: str | None = None,
     ) -> None:
-        name = "equation_forward" + (
-            "" if equation_name is None else f"_{equation_name}"
-        )
-        super().__init__(optimizer_params, name)
+        super().__init__(optimizer_params)
 
         self._diff_eq = neural_diff_eq
 
@@ -110,15 +102,9 @@ class ForwardProblemDiffEquationModel(BaseModel):
 
 class InverseProblemDiffEquationModel(BaseModel):
     def __init__(
-        self,
-        neural_diff_eq: FrozenDiffEquation,
-        optimizer_params: OptimizerParams,
-        equation_name: str | None = None,
+        self, neural_diff_eq: FrozenDiffEquation, optimizer_params: OptimizerParams
     ) -> None:
-        name = "equation_inverse" + (
-            "" if equation_name is None else f"_{equation_name}"
-        )
-        super().__init__(optimizer_params, name)
+        super().__init__(optimizer_params)
 
         self._diff_eq = neural_diff_eq
 

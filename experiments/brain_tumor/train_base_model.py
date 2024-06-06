@@ -91,7 +91,9 @@ def _create_u_net() -> nn.Module:
 
 def create_model() -> DiffEquationModel:
     diff_eq_nn = DiffEquation([_create_u_net(), _create_u_net()])
-    diff_eq_model = DiffEquationModel(diff_eq_nn, OptimizerParams(optim.Adam, 0.00015))
+    diff_eq_model = DiffEquationModel(
+        diff_eq_nn, optimizer_params=OptimizerParams(optim.Adam, 0.00015)
+    )
     return diff_eq_model
 
 
@@ -100,7 +102,14 @@ def run_training(
     train_ds: DynamicSimulationDataset,
     test_ds: DynamicSimulationDataset,
 ) -> None:
-    train(model, train_ds, test_ds, batch_size=64, epochs=50)
+    train(
+        model,
+        run_name="equation_diffusion_proliferation_together",
+        train_dataset=train_ds,
+        val_dataset=test_ds,
+        batch_size=64,
+        epochs=50,
+    )
 
 
 def main() -> None:

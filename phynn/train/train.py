@@ -1,4 +1,3 @@
-from datetime import datetime
 import lightning as L
 from lightning.pytorch.loggers import WandbLogger
 from torch.utils.data import Dataset, DataLoader
@@ -9,6 +8,7 @@ from phynn.models import BaseModel
 
 def train(
     model: BaseModel,
+    run_name: str,
     train_dataset: Dataset,
     val_dataset: Dataset,
     batch_size: int,
@@ -17,7 +17,6 @@ def train(
     train_dataloader = DataLoader(train_dataset, batch_size, True)
     val_dataloader = DataLoader(val_dataset, batch_size, False)
 
-    run_name = f"{model.name}_{datetime.now().strftime('%Y.%m.%d_%H:%M')}"
     logger = WandbLogger(project="physics-learning", name=run_name)
 
     try:

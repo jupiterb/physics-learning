@@ -17,7 +17,7 @@ class VAEModel(BaseModel):
     def __init__(
         self, vae: VariationalAutoEncoder, optimizer_params: OptimizerParams
     ) -> None:
-        super().__init__(optimizer_params, "vae")
+        super().__init__(optimizer_params)
         self._vae = vae
         self._kld_weight = 1 / th.prod(th.Tensor(vae.in_shape))
 
