@@ -11,7 +11,6 @@ from phynn.nn.base import NNBuilder
 class FCBlockParams:
     features: int
     activation: Type[nn.Module] = nn.LeakyReLU
-    batch_norm: bool = True
 
 
 def FCBlock(
@@ -19,12 +18,7 @@ def FCBlock(
 ) -> nn.Sequential:
     fc = nn.Sequential()
     fc.append(nn.Linear(in_features, out_features))
-
-    if params.batch_norm:
-        fc.append(nn.BatchNorm1d(out_features))
-
     fc.append(params.activation())
-
     return fc
 
 

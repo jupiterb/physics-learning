@@ -16,5 +16,5 @@ class ImagesDataset(Dataset):
     def __getitem__(self, index: int) -> th.Tensor:
         return self.__getitems__([index])[0]
 
-    def __getitems__(self, indices: Sequence[int]) -> th.Tensor:
-        return self._data.get_batch(indices)
+    def __getitems__(self, indices: Sequence[int]) -> list[th.Tensor]:
+        return [image for image in self._data.get_batch(indices)]

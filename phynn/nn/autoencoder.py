@@ -63,8 +63,8 @@ class AutoEncoderBuilder(AutoEncoder, Generic[NNBlockParams]):
         self._decoder_builder = decoder_builder
 
     def add_block(self, params: NNBlockParams) -> AutoEncoderBuilder:
-        self._encoder_builder.append(params)
-        self._decoder_builder.prepend(params)
+        self._encoder = self._encoder_builder.append(params).nn
+        self._decoder = self._decoder_builder.prepend(params).nn
         return self
 
 
@@ -92,7 +92,7 @@ class _VariationalDecoder(nn.Module):
 
     def forward(self, mu: th.Tensor, log_var: th.Tensor) -> th.Tensor:
         std = th.exp(0.5 * log_var)
-        latent = mu + std * th.randn(mu.size())
+        latent = mu + std * th.randn(mu.size()).to(mu.device)
         return self._decoder(latent)
 
 
@@ -105,7 +105,7 @@ class VariationalAutoEncoder(AutoEncoder):
         latent_size: int,
     ) -> None:
         with th.no_grad():
-            pre_latent_shape = encoder(th.zeros((1, *in_shape)))[1:]
+            pre_latent_shape = encoder(th.zeros((1, *in_shape))).shape[1:]
 
         if len(pre_latent_shape) > 1:
             raise ValueError(
