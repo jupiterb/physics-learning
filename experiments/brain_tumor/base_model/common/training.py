@@ -9,6 +9,9 @@ from phynn.models import DiffEquationModel, OptimizerParams
 from phynn.train import train
 
 
+_INPUT_SHAPE = (1, 120, 120)
+
+
 def run_training(
     neural_nets: Sequence[nn.Module],
     train_ds: DynamicSimulationDataset,
@@ -20,7 +23,7 @@ def run_training(
     diff_eq_nn = DiffEquation(neural_nets)
 
     diff_eq_model = DiffEquationModel(
-        diff_eq_nn, optimizer_params=OptimizerParams(optim.Adam, lr)
+        diff_eq_nn, _INPUT_SHAPE, optimizer_params=OptimizerParams(optim.Adam, lr)
     )
 
     train(

@@ -9,8 +9,8 @@ def main() -> None:
     # set up datasets
 
     train_ics, test_ics = get_data()
-    train_ds = create_dataset(train_ics)
-    test_ds = create_dataset(test_ics)
+    train_ds = create_dataset(train_ics, 6, 3, 8)
+    test_ds = create_dataset(test_ics, 6, 3, 8)
 
     # train diffusion only
 
@@ -21,7 +21,8 @@ def main() -> None:
         train_ds=train_ds,
         test_ds=test_ds,
         run_name="equation_diffusion_only",
-        epochs=40,
+        epochs=45,
+        lr=0.0001,
     )
 
     # train proliferation only
@@ -33,18 +34,22 @@ def main() -> None:
         train_ds=train_ds,
         test_ds=test_ds,
         run_name="equation_proliferation_only",
-        epochs=40,
+        epochs=45,
+        lr=0.0001,
     )
 
     # fine tune together
+
+    train_ds = create_dataset(train_ics)
+    test_ds = create_dataset(test_ics)
 
     run_training(
         neural_nets=[diffusion_net, proliferation_net],
         train_ds=train_ds,
         test_ds=test_ds,
         run_name="equation_diffusion_proliferation_fine_tune",
-        epochs=10,
-        lr=0.00005,
+        epochs=5,
+        lr=0.0001,
     )
 
 

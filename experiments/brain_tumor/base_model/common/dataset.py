@@ -44,19 +44,23 @@ class AugmentedDiffEquation(DiffEquation):
 
 def create_dataset(
     initial_conditions: ImagesDataInterface,
+    max_simulation_steps: int = 9,
+    min_simulation_steps: int = 6,
+    max_pre_steps: int = 4,
 ) -> DynamicSimulationDataset:
     diff_eq = AugmentedDiffEquation([DiffusionTerm(), ProliferationTerm()])
     diff_eq = diff_eq.to(training_device)
 
     params = lambda batch_size: (
-        (th.rand((batch_size, 2)) * th.Tensor([[2.5, 2.5]])) ** 1.3
+        (th.rand((batch_size, 2)) * th.Tensor([[2.2, 2.2]]) + th.Tensor([[0.2, 0.2]]))
+        ** 2.0
     ).to(training_device)
 
     return DynamicSimulationDataset(
         initial_conditions=initial_conditions,
         diff_eq=diff_eq,
         params_provider=params,
-        max_simulation_steps=8,
-        min_simulation_steps=3,
-        max_pre_steps=8,
+        max_simulation_steps=max_simulation_steps,
+        min_simulation_steps=min_simulation_steps,
+        max_pre_steps=max_pre_steps,
     )
