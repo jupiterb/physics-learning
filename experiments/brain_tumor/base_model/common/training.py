@@ -31,6 +31,6 @@ def run_training(
         run_name=run_name,
         train_dataset=train_ds,
         val_dataset=test_ds,
-        batch_size=64,
+        batch_size=32,
         epochs=epochs,
     )

@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+import torch.nn as nn
+
 from dataclasses import dataclass
-from torch import nn
 from typing import Type
 
 from phynn.nn.base import NNBuilder
+
+
+@dataclass
+class FCInitParams:
+    initial_features: int
 
 
 @dataclass
@@ -13,29 +19,54 @@ class FCBlockParams:
     activation: Type[nn.Module] = nn.LeakyReLU
 
 
-def FCBlock(
-    in_features: int, out_features: int, params: FCBlockParams
-) -> nn.Sequential:
+@dataclass
+class _ActualFCBlockParams:
+    in_features: int
+    out_features: int
+    activation: Type[nn.Module] = nn.LeakyReLU
+
+
+def FCBlock(params: _ActualFCBlockParams) -> nn.Sequential:
     fc = nn.Sequential()
-    fc.append(nn.Linear(in_features, out_features))
+    fc.append(nn.Linear(params.in_features, params.out_features))
     fc.append(params.activation())
     return fc
 
 
-class FC(NNBuilder[FCBlockParams]):
-    def __init__(self, initial_features: int) -> None:
-        super().__init__()
-        self._in_features = initial_features
-        self._out_features = initial_features
+class FC(NNBuilder[FCInitParams, FCBlockParams]):
+    def init(self, params: FCInitParams) -> NNBuilder[FCInitParams, FCBlockParams]:
+        self._in_features = params.initial_features
+        self._out_features = params.initial_features
+        self._block_params = []
+        return self
 
-    def prepend(self, params: FCBlockParams) -> NNBuilder[FCBlockParams]:
-        block = FCBlock(params.features, self._in_features, params)
-        self._nn = block + self._nn
+    def prepend(self, params: FCBlockParams) -> NNBuilder[FCInitParams, FCBlockParams]:
+        actual_params = _ActualFCBlockParams(
+            params.features, self._in_features, params.activation
+        )
+        self._block_params = [actual_params] + self._block_params
         self._in_features = params.features
         return self
 
-    def append(self, params: FCBlockParams) -> NNBuilder[FCBlockParams]:
-        block = FCBlock(self._out_features, params.features, params)
-        self._nn = self._nn + block
+    def append(self, params: FCBlockParams) -> NNBuilder[FCInitParams, FCBlockParams]:
+        actual_params = _ActualFCBlockParams(
+            self._out_features, params.features, params.activation
+        )
+        self._block_params.append(actual_params)
         self._out_features = params.features
         return self
+
+    def reset(self, keep_end: bool) -> NNBuilder[FCInitParams, FCBlockParams]:
+        return (
+            self.init(FCInitParams(self._out_features))
+            if keep_end
+            else self.init(FCInitParams(self._in_features))
+        )
+
+    def build(self) -> nn.Sequential:
+        fc = nn.Sequential()
+
+        for params in self._block_params:
+            fc.append(FCBlock(params))
+
+        return fc

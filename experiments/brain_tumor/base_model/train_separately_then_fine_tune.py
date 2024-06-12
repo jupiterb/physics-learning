@@ -1,7 +1,7 @@
 from phynn.diff.terms import DiffusionTerm, ProliferationTerm
 
 from common.dataset import get_data, create_dataset
-from common.neural import create_u_net
+from common.neural import create_resnet
 from common.training import run_training
 
 
@@ -14,7 +14,7 @@ def main() -> None:
 
     # train diffusion only
 
-    diffusion_net = create_u_net()
+    diffusion_net = create_resnet()
 
     run_training(
         neural_nets=[diffusion_net, ProliferationTerm()],
@@ -27,7 +27,7 @@ def main() -> None:
 
     # train proliferation only
 
-    proliferation_net = create_u_net()
+    proliferation_net = create_resnet()
 
     run_training(
         neural_nets=[DiffusionTerm(), proliferation_net],

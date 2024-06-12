@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+import torch.nn as nn
+
 from dataclasses import dataclass
-from torch import nn
 from typing import Type
 
 from phynn.nn.base import NNBuilder
+
+
+@dataclass
+class ConvInitParams:
+    initial_channels: int
 
 
 @dataclass
@@ -19,57 +25,87 @@ class ConvBlockParams:
     dropout: float = 0.0
 
 
-def ConvBlock(
-    in_channels: int,
-    out_channels: int,
-    params: ConvBlockParams,
-    transpose: bool = False,
-) -> nn.Sequential:
+@dataclass
+class _ActualConvBlockParams:
+    in_channels: int
+    out_channels: int
+    transpose: bool
+    details: ConvBlockParams
+
+
+def ConvBlock(params: _ActualConvBlockParams) -> nn.Sequential:
+    p = params
+    d = p.details
+
     conv = nn.Sequential()
 
-    if params.rescale > 1 and transpose:
-        conv.append(nn.Upsample(scale_factor=params.rescale, mode="nearest"))
+    if d.rescale > 1 and p.transpose:
+        conv.append(nn.Upsample(scale_factor=d.rescale, mode="nearest"))
 
-    padding = (params.kernel_size - 1) // 2 if params.same_padding else 1
-    conv_cls = nn.ConvTranspose2d if transpose else nn.Conv2d
+    padding = (d.kernel_size - 1) // 2 if d.same_padding else 1
+    conv_cls = nn.ConvTranspose2d if p.transpose else nn.Conv2d
 
-    if params.dropout > 0:
-        conv.append(nn.Dropout(params.dropout))
+    if d.dropout > 0:
+        conv.append(nn.Dropout(d.dropout))
 
     conv.append(
-        conv_cls(in_channels, out_channels, params.kernel_size, params.stride, padding)
+        conv_cls(p.in_channels, p.out_channels, d.kernel_size, d.stride, padding)
     )
 
-    if params.batch_norm:
-        conv.append(nn.BatchNorm2d(out_channels))
+    if d.batch_norm:
+        conv.append(nn.BatchNorm2d(p.out_channels))
 
-    conv.append(params.activation())
+    conv.append(d.activation())
 
-    if params.rescale > 1 and not transpose:
-        conv.append(nn.MaxPool2d(kernel_size=params.rescale, stride=params.rescale))
+    if d.rescale > 1 and not p.transpose:
+        conv.append(nn.MaxPool2d(kernel_size=d.rescale, stride=d.rescale))
 
     return conv
 
 
-class Conv(NNBuilder[ConvBlockParams]):
-    def __init__(self, initial_channels: int, transpose: bool = False) -> None:
-        super().__init__()
-        self._in_channels = initial_channels
-        self._out_channels = initial_channels
+class Conv(NNBuilder[ConvInitParams, ConvBlockParams]):
+    def __init__(self, transpose: bool = False) -> None:
         self._transpose = transpose
 
-    def transpose(self, value: bool) -> NNBuilder[ConvBlockParams]:
-        self._transpose = value
+    def init(
+        self, params: ConvInitParams
+    ) -> NNBuilder[ConvInitParams, ConvBlockParams]:
+        self._in_channels = params.initial_channels
+        self._out_channels = params.initial_channels
+        self._block_params = []
         return self
 
-    def prepend(self, params: ConvBlockParams) -> NNBuilder[ConvBlockParams]:
-        block = ConvBlock(params.channels, self._in_channels, params, self._transpose)
-        self._nn = block + self._nn
+    def prepend(
+        self, params: ConvBlockParams
+    ) -> NNBuilder[ConvInitParams, ConvBlockParams]:
+        actual_params = _ActualConvBlockParams(
+            params.channels, self._in_channels, self._transpose, params
+        )
+        self._block_params = [actual_params] + self._block_params
         self._in_channels = params.channels
         return self
 
-    def append(self, params: ConvBlockParams) -> NNBuilder[ConvBlockParams]:
-        block = ConvBlock(self._out_channels, params.channels, params, self._transpose)
-        self._nn = self._nn + block
+    def append(
+        self, params: ConvBlockParams
+    ) -> NNBuilder[ConvInitParams, ConvBlockParams]:
+        actual_params = _ActualConvBlockParams(
+            self._out_channels, params.channels, self._transpose, params
+        )
+        self._block_params.append(actual_params)
         self._out_channels = params.channels
         return self
+
+    def reset(self, keep_end: bool) -> NNBuilder[ConvInitParams, ConvBlockParams]:
+        return (
+            self.init(ConvInitParams(self._out_channels))
+            if keep_end
+            else self.init(ConvInitParams(self._in_channels))
+        )
+
+    def build(self) -> nn.Sequential:
+        conv = nn.Sequential()
+
+        for params in self._block_params:
+            conv.append(ConvBlock(params))
+
+        return conv

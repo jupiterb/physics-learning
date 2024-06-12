@@ -13,8 +13,10 @@ from phynn.nn import (
     VariationalAutoEncoder,
     AutoEncoderBuilder,
     Conv,
+    ConvInitParams,
     ConvBlockParams,
     FC,
+    FCInitParams,
     FCBlockParams,
 )
 from phynn.train import train, training_device
@@ -32,25 +34,27 @@ def create_dataset(data_interface: ImagesDataInterface) -> ImagesDataset:
 
 def create_vae() -> VariationalAutoEncoder:
     in_shape = (1, 120, 120)
-    latent_size = 128
+    latent_size = 64
 
     conv_ae = (
-        AutoEncoderBuilder(in_shape, Conv(1), Conv(1, transpose=True))
-        .add_block(ConvBlockParams(16, 3))
-        .add_block(ConvBlockParams(32, 3, rescale=2))
+        AutoEncoderBuilder(Conv(), Conv(transpose=True))
+        .init(in_shape, ConvInitParams(1))
+        .add_block(ConvBlockParams(32, 3, rescale=3))
         .add_block(ConvBlockParams(32, 3))
         .add_block(ConvBlockParams(64, 3, rescale=2))
         .add_block(ConvBlockParams(64, 3))
-        .add_block(ConvBlockParams(128, 3, rescale=2))
+        .add_block(ConvBlockParams(96, 3, rescale=2))
+        .build()
     )
 
-    fc_input_size = 128 * 15 * 15
+    fc_input_size = 96 * 10 * 10
 
     fc_ae = (
-        AutoEncoderBuilder((fc_input_size,), FC(fc_input_size), FC(fc_input_size))
+        AutoEncoderBuilder(FC(), FC())
+        .init((fc_input_size,), FCInitParams(fc_input_size))
         .add_block(FCBlockParams(1024))
-        .add_block(FCBlockParams(512))
         .add_block(FCBlockParams(256))
+        .build()
     )
 
     ae = conv_ae.flatten().add_inner(fc_ae)

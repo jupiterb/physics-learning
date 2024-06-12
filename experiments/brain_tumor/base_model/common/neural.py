@@ -1,28 +1,24 @@
 import torch.nn as nn
 
-from phynn.nn import ResBlock, Conv, ConvBlockParams
+from phynn.nn import ResNet, ResBlockParams, Conv, ConvInitParams, ConvBlockParams
 from phynn.train import training_device
 
 
-def create_u_net() -> nn.Module:
-    inner = (
-        Conv(48)
-        .append(ConvBlockParams(64, 3, rescale=2))
-        .transpose(True)  # type: ignore
-        .append(ConvBlockParams(48, 3, rescale=2))
-    )
-    inner_res = ResBlock(inner.unload())
-
-    down_sampling = Conv(32).append(ConvBlockParams(48, 3, rescale=2, dropout=0.1))
-    up_sampling = Conv(32, transpose=True).prepend(ConvBlockParams(48, 3, rescale=2))
-
-    middle = ResBlock(
-        nn.Sequential(down_sampling.unload(), inner_res, up_sampling.unload())
+def create_resnet() -> nn.Module:
+    down_sampling_resnet = (
+        ResNet(Conv())
+        .init((ConvInitParams(1)))
+        .append(ConvBlockParams(64, 3, rescale=3))
+        .append(ResBlockParams(ConvBlockParams(64, 3), 3))
+        .append(ResBlockParams(ConvBlockParams(64, 3), 3))
+        .build()
     )
 
-    down_sampling.prepend(ConvBlockParams(1, 3, rescale=2, dropout=0.3))
-    up_sampling.append(ConvBlockParams(1, 3, nn.Hardtanh, rescale=2))
+    up_sampling = (
+        Conv(transpose=True)
+        .init(ConvInitParams(1))
+        .prepend(ConvBlockParams(64, 3, rescale=3, activation=nn.Hardtanh))
+        .build()
+    )
 
-    return ResBlock(
-        nn.Sequential(down_sampling.unload(), middle, up_sampling.unload())
-    ).to(training_device)
+    return nn.Sequential(down_sampling_resnet, up_sampling).to(training_device)

@@ -1,5 +1,5 @@
 from common.dataset import get_data, create_dataset
-from common.neural import create_u_net
+from common.neural import create_resnet
 from common.training import run_training
 
 
@@ -8,8 +8,8 @@ def main() -> None:
     train_ds = create_dataset(train_ics)
     test_ds = create_dataset(test_ics)
 
-    diffusion_net = create_u_net()
-    proliferation_net = create_u_net()
+    diffusion_net = create_resnet()
+    proliferation_net = create_resnet()
 
     run_training(
         neural_nets=[diffusion_net, proliferation_net],

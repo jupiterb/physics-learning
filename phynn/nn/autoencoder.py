@@ -4,8 +4,8 @@ import torch as th
 from torch import nn
 from typing import Generic, Sequence
 
-from phynn.nn.base import NNBlockParams, NNBuilder
-from phynn.nn.fc import FC, FCBlockParams
+from phynn.nn.base import NNInitParams, NNBlockParams, NNBuilder
+from phynn.nn.fc import FC, FCInitParams, FCBlockParams
 
 
 class AutoEncoder(nn.Module):
@@ -51,20 +51,38 @@ class AutoEncoder(nn.Module):
         return self._decoder(latent)
 
 
-class AutoEncoderBuilder(AutoEncoder, Generic[NNBlockParams]):
+class AutoEncoderBuilder(Generic[NNInitParams, NNBlockParams]):
     def __init__(
         self,
-        in_shape: Sequence[int],
-        encoder_builder: NNBuilder[NNBlockParams],
-        decoder_builder: NNBuilder[NNBlockParams],
+        encoder_builder: NNBuilder[NNInitParams, NNBlockParams],
+        decoder_builder: NNBuilder[NNInitParams, NNBlockParams],
     ) -> None:
-        super().__init__(in_shape, encoder_builder.nn, decoder_builder.nn)
         self._encoder_builder = encoder_builder
         self._decoder_builder = decoder_builder
 
-    def add_block(self, params: NNBlockParams) -> AutoEncoderBuilder:
-        self._encoder = self._encoder_builder.append(params).nn
-        self._decoder = self._decoder_builder.prepend(params).nn
+    def init(
+        self, in_shape: Sequence[int], params: NNInitParams
+    ) -> AutoEncoderBuilder[NNInitParams, NNBlockParams]:
+        self._in_shape = in_shape
+        self._encoder_builder.init(params)
+        self._decoder_builder.init(params)
+        return self
+
+    def add_block(
+        self, params: NNBlockParams
+    ) -> AutoEncoderBuilder[NNInitParams, NNBlockParams]:
+        self._encoder_builder.append(params)
+        self._decoder_builder.prepend(params)
+        return self
+
+    def build(self) -> AutoEncoder:
+        encoder = self._encoder_builder.build()
+        decoder = self._decoder_builder.build()
+        return AutoEncoder(self._in_shape, encoder, decoder)
+
+    def reset(self) -> AutoEncoderBuilder[NNInitParams, NNBlockParams]:
+        self._encoder_builder.reset(False)
+        self._decoder_builder.reset(True)
         return self
 
 
@@ -87,7 +105,12 @@ class _VariationalDecoder(nn.Module):
         self, decoder: nn.Module, pre_latent_size: int, latent_size: int
     ) -> None:
         super(_VariationalDecoder, self).__init__()
-        pre_decoder_fc = FC(latent_size).append(FCBlockParams(pre_latent_size)).nn
+        pre_decoder_fc = (
+            FC()
+            .init(FCInitParams(latent_size))
+            .append(FCBlockParams(pre_latent_size))
+            .build()
+        )
         self._decoder = nn.Sequential(pre_decoder_fc, decoder)
 
     def forward(self, mu: th.Tensor, log_var: th.Tensor) -> th.Tensor:
