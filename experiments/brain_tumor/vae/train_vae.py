@@ -36,8 +36,11 @@ def create_vae() -> VariationalAutoEncoder:
     in_shape = (1, 120, 120)
     latent_size = 64
 
+    conv_encoder_builder = Conv()
+    conv_decoder_builder = Conv(transpose=True, upsample=True, rescale_on_begin=True)
+
     conv_ae = (
-        AutoEncoderBuilder(Conv(), Conv(transpose=True))
+        AutoEncoderBuilder(conv_encoder_builder, conv_decoder_builder)
         .init(in_shape, ConvInitParams(1))
         .add_block(ConvBlockParams(32, 3, rescale=3))
         .add_block(ConvBlockParams(32, 3))
