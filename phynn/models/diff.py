@@ -4,7 +4,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.utils import make_grid
 
-from dataclasses import dataclass
 from typing import Sequence
 
 from phynn.models.base import BaseModel, OptimizerParams
@@ -29,68 +28,33 @@ def _try_log_val_visualization(
         )
 
 
-@dataclass
-class _DiffLossInfo:
-    loss: th.Tensor
-    mass_loss: th.Tensor
-    image_loss: th.Tensor
-
-    def asdict(self) -> dict[str, th.Tensor]:
-        return {
-            "loss": self.loss,
-            "mass_loss": self.mass_loss,
-            "image_loss": self.image_loss,
-        }
-
-
-class _DiffEquationLoss:
-    def __init__(self, image_shape: Sequence[int]) -> None:
-        self._mass_loss_weight = 1 / th.prod(th.Tensor(image_shape))
-        self._mass_dims = list(range(1, len(image_shape)))
-
-    def __call__(self, prediction: th.Tensor, target: th.Tensor) -> _DiffLossInfo:
-        image_loss = F.mse_loss(prediction, target)
-
-        prediction_mass = prediction.sum(self._mass_dims)
-        target_mass = target.sum(self._mass_dims)
-
-        mass_loss = F.mse_loss(prediction_mass, target_mass) * self._mass_loss_weight
-
-        loss = image_loss + mass_loss
-
-        return _DiffLossInfo(loss, mass_loss, image_loss)
-
-
 class DiffEquationModel(BaseModel):
     def __init__(
-        self,
-        neural_diff_eq: DiffEquation,
-        input_shape: Sequence[int],
-        optimizer_params: OptimizerParams,
+        self, neural_diff_eq: DiffEquation, optimizer_params: OptimizerParams
     ) -> None:
         super().__init__(optimizer_params)
         self._diff_eq = neural_diff_eq
-        self._loss_fun = _DiffEquationLoss(input_shape)
 
     def training_step(self, batch: th.Tensor, batch_idx: int) -> th.Tensor:  # type: ignore
         u_input, u_target, params, duration = batch
         u_prediction = simulate(self._diff_eq, u_input, params, duration)
-        loss_info = self._loss_fun(u_prediction, u_target)
-        self.log_dict(loss_info.asdict())
-        return loss_info.loss
+        loss = self._loss(u_prediction, u_target)
+        self.log_dict({"loss": loss})
+        return loss
 
     def validation_step(self, batch: th.Tensor, batch_idx: int) -> th.Tensor:  # type: ignore
         u_input, u_target, params, duration = batch
         u_prediction = simulate(self._diff_eq, u_input, params, duration)
-        loss_info = self._loss_fun(u_prediction, u_target)
-        self.log_dict(
-            {"val_" + name: value for name, value in loss_info.asdict().items()}
-        )
+        loss = self._loss(u_prediction, u_target)
+        self.log_dict({"val_loss": loss})
 
         if batch_idx == 0:
             _try_log_val_visualization(self.logger, u_input, u_target, u_prediction)
 
-        return loss_info.loss
+        return loss
+
+    def _loss(self, prediction: th.Tensor, target: th.Tensor) -> th.Tensor:
+        return F.mse_loss(prediction, target)
 
 
 class ForwardProblemDiffEquationModel(BaseModel):
