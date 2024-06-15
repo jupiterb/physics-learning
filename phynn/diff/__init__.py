@@ -1,1 +1,6 @@
-from phynn.diff.equation import DiffEquation, FrozenDiffEquation, simulate
+from phynn.diff.equation import (
+    DiffEquationComponents,
+    DiffEquation,
+    FrozenDiffEquation,
+    simulate,
+)

@@ -1,19 +1,30 @@
 import torch as th
 import torch.nn as nn
+
 from typing import Sequence
 
 
-class DiffEquation(nn.Module):
+class DiffEquationComponents(nn.Module):
     def __init__(self, neural_eq_components: Sequence[nn.Module]) -> None:
-        super(DiffEquation, self).__init__()
+        super(DiffEquationComponents, self).__init__()
         self._nns = nn.ModuleList(neural_eq_components)
+
+    def forward(self, u: th.Tensor) -> th.Tensor:
+        return th.cat([nn(u) for nn in self._nns], 1)
+
+
+class DiffEquation(nn.Module):
+    def __init__(self, diff_eq_components: nn.Module, num_components: int) -> None:
+        super(DiffEquation, self).__init__()
+        self._diff_eq_components = diff_eq_components
+        self._num_components = num_components
 
     @property
     def num_components(self) -> int:
-        return len(self._nns)
+        return self._num_components
 
     def _components(self, u: th.Tensor) -> th.Tensor:
-        return th.cat([nn(u) for nn in self._nns], 1)
+        return self._diff_eq_components(u)
 
     def forward(self, u: th.Tensor, params: th.Tensor) -> th.Tensor:
         components = self._components(u)
@@ -22,8 +33,8 @@ class DiffEquation(nn.Module):
 
 
 class FrozenDiffEquation(DiffEquation):
-    def __init__(self, neural_eq_components: Sequence[nn.Module]) -> None:
-        super().__init__(neural_eq_components)
+    def __init__(self, diff_eq_components: nn.Module, num_components: int) -> None:
+        super().__init__(diff_eq_components, num_components)
 
     def _components(self, u: th.Tensor) -> th.Tensor:
         with th.no_grad():
