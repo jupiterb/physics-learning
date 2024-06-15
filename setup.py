@@ -1,11 +1,12 @@
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 
-requirements = ["numpy", "torch", "h5py", "pydicom", "nibabel", "scipy", "tqdm"]
+phynn_requirements = ["torch", "lightning", "h5py", "wandb"]
+
 
 setup(
-    name="tumor_sim_pinns",
+    name="physics-learning",
     version="0.0.0",
     description="",
-    packages=find_packages(),
-    install_requires=requirements,
+    packages=find_namespace_packages(),
+    extras_require={"phynn": phynn_requirements},
 )

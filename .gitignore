@@ -161,8 +161,10 @@ cython_debug/
 
 *.DS_Store
 
-# datasets
-solutions/brain_tumor/data/raw/Brain-Tumor-Progression
-solutions/brain_tumor/data/preprocessed/Brain-Tumor-Progression
-solutions/brain_tumor/data/raw/BRATS2020
-solutions/brain_tumor/data/preprocessed/BRATS2020
+# experiments
+experiments/brain_tumor/data/raw/Brain-Tumor-Progression
+experiments/brain_tumor/data/processed/Brain-Tumor-Progression
+experiments/brain_tumor/data/raw/BRATS2020
+experiments/brain_tumor/data/processed/BRATS2020
+experiments/brain_tumor/**/physics-learning
+experiments/brain_tumor/**/wandb

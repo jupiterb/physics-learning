@@ -1,0 +1,7 @@
+ipykernel
+ipywidgets
+matplotlib
+nibabel
+numpy
+pandas
+torchvision

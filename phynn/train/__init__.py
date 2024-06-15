@@ -1,2 +1,2 @@
-from phynn.train.dataset import PhynnDataset
-from phynn.train.trainer import Trainer
+from phynn.train.device import training_device
+from phynn.train.train import train
