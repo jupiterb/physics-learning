@@ -33,6 +33,7 @@ class DiffEquationModel(BaseModel):
         self, neural_diff_eq: DiffEquation, optimizer_params: OptimizerParams
     ) -> None:
         super().__init__(optimizer_params)
+        self.save_hyperparameters(ignore=["neural_diff_eq"])
         self._diff_eq = neural_diff_eq
 
     def training_step(self, batch: th.Tensor, batch_idx: int) -> th.Tensor:  # type: ignore
