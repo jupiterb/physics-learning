@@ -2,14 +2,14 @@ from dataclasses import dataclass
 
 import lightning as L
 from torch import optim
-from typing import Type
+from typing import Type, Union
 
 
 @dataclass
 class OptimizerParams:
-    optimizer: (
-        Type[optim.Adam] | Type[optim.AdamW] | Type[optim.RMSprop] | Type[optim.SGD]
-    )
+    optimizer: Union[
+        Type[optim.Adam], Type[optim.AdamW], Type[optim.RMSprop], Type[optim.SGD]
+    ]
     lr: float
 
 

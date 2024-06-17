@@ -1,6 +1,6 @@
 from setuptools import setup, find_namespace_packages
 
-phynn_requirements = ["torch", "lightning", "h5py", "wandb"]
+phynn_requirements = ["torch", "lightning", "h5py", "wandb", "numpy==1.23.1"]
 
 
 setup(

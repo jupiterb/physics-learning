@@ -2,12 +2,12 @@ from abc import ABC, abstractmethod
 import h5py
 import os
 import torch as th
-from typing import Callable, Sequence
+from typing import Callable, Optional, Sequence, Union
 
 from phynn.data.utils import HDF5DataExportManager
 
 
-Indices = Sequence[int] | th.Tensor
+Indices = Union[Sequence[int], th.Tensor]
 
 
 class ImagesDataInterface(ABC):
@@ -103,7 +103,7 @@ def train_test_split(
 def save(
     data: ImagesDataInterface,
     path: os.PathLike,
-    batch_size: int | None = None,
+    batch_size: Optional[int] = None,
     override: bool = True,
 ):
     batch_size = data.size if batch_size is None else batch_size

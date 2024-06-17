@@ -2,7 +2,7 @@ import torch as th
 import torch.nn as nn
 
 from dataclasses import dataclass
-from typing import Generic
+from typing import Generic, Union
 
 from phynn.nn.base import NNInitParams, NNBlockParams, NNBuilder
 
@@ -13,7 +13,7 @@ class ResBlockParams(Generic[NNBlockParams]):
     size: int
 
 
-MaybeResBlockParams = ResBlockParams[NNBlockParams] | NNBlockParams
+MaybeResBlockParams = Union[ResBlockParams[NNBlockParams], NNBlockParams]
 
 
 class ResBlock(nn.Module):
