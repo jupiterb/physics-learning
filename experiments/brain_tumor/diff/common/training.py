@@ -14,7 +14,7 @@ def run_training(
     run_name: str,
     batch_size: int,
     epochs: int,
-    lr: float = 0.00015,
+    lr: float = 0.00005,
 ) -> None:
     diff_eq_nn = DiffEquation(diff_eq_components_net, 2)
 
